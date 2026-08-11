@@ -20,7 +20,6 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash= db.Column(db.String(255), nullable=False)
 
-    role = db.Column(db.String(20), nullable=False, default='member')
 
     created_at = db.Column(db.DateTime, default= datetime.utcnow)
 
@@ -40,49 +39,139 @@ class User(db.Model):
             'id':self.id,
             'username':self.username,
             'email':self.email,
-            'role':self.role
         }
 
-class Bug(db.Model):
+class Organization(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    name= db.Column(db.String(100), nullable=False)
+
+    slug = db.Column(db.String(50), unique=True, nullable=False)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    projects = db.relationship(
+        'Project', backref='organization', lazy=True, cascade='all, delete-orphan'
+    )
+    memberships = db.relationship(
+        'OrganizationMember',
+        backref='organization',
+        lazy=True,
+        cascade='all , delete-orphan'
+    )
+
+    def to_dict(self):
+        return {
+            'id':self.id,
+            'name':self.name,
+            'slug':self.slug,
+            'member_count':len(self.memberships),
+            'project_count':len(self.projects)
+        }
+    
+
+class OrganizationMember(db.Model):
+    id= db.Column(db.Integer, primary_key=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey('organization.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    role = db.Column(db.String(20), nullable=False, default='member')
+
+    joined_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user= db.relationship('User', backref='organization_memberships')
+
+    def to_dict(self):
+        return {
+            'id':self.id,
+            'user':self.user.to_dict(),
+            'role':self.role,
+            'joined_at':self.joined_at.isoformat()
+        }
+
+
+class Project(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    key = db.Column(db.String(10), unique=True, nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey('organization.id'), nullable=False)
+    owner_id=db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    owner = db.relationship('User', backref='owned_projects')
+
+# Tracks the next issue number to assign within this project.
+    issue_counter = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    issues = db.relationship(
+        'Issue',
+        backref='project',
+        lazy=True,
+        cascade='all, delete-orphan'
+    )
+
+    def to_dict(self):
+        return {
+            'id':self.id,
+            'name':self.name,
+            'key':self.key,
+            'description':self.description,
+            'organization_id':self.organization_id,
+            'owner':self.owner.to_dict(),
+            'issue_count':len(self.issues)
+        }
+
+class Issue(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    issue_key = db.Column(db.String(20), unique=True, nullable=False)
     title = db.Column(db.String(150), nullable=False)
     description = db.Column(db.Text, nullable=False)
     steps_to_reproduce = db.Column(db.Text, nullable=True)
-
+    issue_type = db.Column(db.String(20), default='bug')
     # 5-level priority, matching the Linear-style scale we
     # planned — not the old 4-level severity scheme.
     priority = db.Column(db.String(20), default='no_priority')
     # no_priority, low, medium, high, urgent
-
+    severity = db.Column(db.String(20), default='low')
     category = db.Column(db.String(30), default='general')
     status = db.Column(db.String(30), default='new')
     # new, in-progress, ready-for-test, closed
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
     reporter_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     assignee_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
 
-    reporter = db.relationship('User', foreign_keys=[reporter_id], backref='reported_bugs')
-    assignee = db.relationship('User', foreign_keys=[assignee_id], backref='assigned_bugs')
+    reporter = db.relationship('User', foreign_keys=[reporter_id], backref='reported_issues')
+    assignee = db.relationship('User', foreign_keys=[assignee_id], backref='assigned_issues')
 
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    updated_at = db.Column(
+        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
     comments = db.relationship(
         'Comment',
-        backref = 'bug',
+        backref = 'issue',
         lazy = True,
         cascade='all, delete-orphan'
+    )
+
+    activities = db.relationship(
+        'IssueActivity', backref='issue', lazy=True, cascade = 'all , delete-orphan'
     )
 
     def to_dict(self):
         return{
             'id':self.id,
+            'issue_key':self.issue_key,
             'title':self.title,
             'description':self.description,
             'steps_to_reproduce':self.steps_to_reproduce,
+            'issue_type':self.issue_type,
             'priority':self.priority,
+            'severity':self.severity,
             'category':self.category,
             'status':self.status,
             'created_at':self.created_at.isoformat(),
+            'updated_at':self.updated_at.isoformat(),
             'reporter':self.reporter.to_dict(),
             'assignee':self.assignee.to_dict() if self.assignee else None,
             'comment_count':len(self.comments)
@@ -93,7 +182,7 @@ class Comment(db.Model):
     message = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime,default=datetime.utcnow)
 
-    bug_id = db.Column(db.Integer, db.ForeignKey('bug.id'), nullable=False)
+    issue_id = db.Column(db.Integer, db.ForeignKey('issue.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
     author = db.relationship('User', backref='comments')
@@ -106,3 +195,25 @@ class Comment(db.Model):
             'author':self.author.to_dict()
         }
 
+class IssueActivity(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    issue_id = db.Column(db.Integer, db.ForeignKey('issue.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    action = db.Column(db.String(50), nullable=False)
+    old_value = db.Column(db.String(100), nullable=True)
+    new_value = db.Column(db.String(100), nullable=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref='activities')
+
+    def to_dict(self):
+        return {
+            'id':self.id,
+            'action':self.action,
+            'old_value':self.old_value,
+            'new_value':self.new_value,
+            'created_at':self.created_at.isoformat(),
+            'user':self.user.to_dict()
+        }

@@ -41,6 +41,9 @@ def create_app():
     from routes.auth_routes import auth_bp
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
 
+    from routes.bug_routes import bug_bp
+    app.register_blueprint(bug_bp, url_prefix='/api/bugs')
+
     return app
 
 
