@@ -42,3 +42,67 @@ class User(db.Model):
             'email':self.email,
             'role':self.role
         }
+
+class Bug(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(150), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    steps_to_reproduce = db.Column(db.Text, nullable=True)
+
+    # 5-level priority, matching the Linear-style scale we
+    # planned — not the old 4-level severity scheme.
+    priority = db.Column(db.String(20), default='no_priority')
+    # no_priority, low, medium, high, urgent
+
+    category = db.Column(db.String(30), default='general')
+    status = db.Column(db.String(30), default='new')
+    # new, in-progress, ready-for-test, closed
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    reporter_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    assignee_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+
+    reporter = db.relationship('User', foreign_keys=[reporter_id], backref='reported_bugs')
+    assignee = db.relationship('User', foreign_keys=[assignee_id], backref='assigned_bugs')
+
+    comments = db.relationship(
+        'Comment',
+        backref = 'bug',
+        lazy = True,
+        cascade='all, delete-orphan'
+    )
+
+    def to_dict(self):
+        return{
+            'id':self.id,
+            'title':self.title,
+            'description':self.description,
+            'steps_to_reproduce':self.steps_to_reproduce,
+            'priority':self.priority,
+            'category':self.category,
+            'status':self.status,
+            'created_at':self.created_at.isoformat(),
+            'reporter':self.reporter.to_dict(),
+            'assignee':self.assignee.to_dict() if self.assignee else None,
+            'comment_count':len(self.comments)
+        }
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime,default=datetime.utcnow)
+
+    bug_id = db.Column(db.Integer, db.ForeignKey('bug.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    author = db.relationship('User', backref='comments')
+
+    def to_dict(self):
+        return{
+            'id':self.id,
+            'message':self.message,
+            'created_at':self.created_at.isoformat(),
+            'author':self.author.to_dict()
+        }
+
