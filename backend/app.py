@@ -3,7 +3,7 @@
 # app, connects the database, sets up JWT, and registers routes.
 
 from flask import Flask
-from flask_jwt_extended import  JWTManager
+from flask_jwt_extended import JWTManager
 from config import Config
 from models import db
 
@@ -41,9 +41,11 @@ def create_app():
     from routes.auth_routes import auth_bp
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
 
-    from routes.bug_routes import bug_bp
-    app.register_blueprint(bug_bp, url_prefix='/api/bugs')
+    from routes.issue_routes import issue_bp
+    app.register_blueprint(issue_bp, url_prefix='/api')
 
+    from routes.project_routes import project_bp
+    app.register_blueprint(project_bp, url_prefix='/api')
     return app
 
 
