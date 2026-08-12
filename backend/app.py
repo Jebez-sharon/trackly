@@ -50,6 +50,9 @@ def create_app():
     from routes.comment_routes import comment_bp
     app.register_blueprint(comment_bp, url_prefix='/api')
 
+    from routes.org_routes import org_bp
+    app.register_blueprint(org_bp, url_prefix='/api')
+
     return app
 
 
