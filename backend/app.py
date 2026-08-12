@@ -53,6 +53,9 @@ def create_app():
     from routes.org_routes import org_bp
     app.register_blueprint(org_bp, url_prefix='/api')
 
+    from routes.label_routes import label_bp
+    app.register_blueprint(label_bp , url_prefix='/api')
+
     return app
 
 

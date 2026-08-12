@@ -155,3 +155,18 @@ def update_status(issue_id):
         raise
 
     return jsonify(issue.to_dict()), 200
+
+@issue_bp.route('/issues/<int:issue_id>', methods=['GET'])
+@jwt_required()
+def get_issue(issue_id):
+    current_user_id = int(get_jwt_identity())
+    issue = Issue.query.get_or_404(issue_id)
+
+    membership= OrganizationMember.query.filter_by(
+        organization_id = issue.project.organization_id, user_id = current_user_id
+    ).first()
+
+    if not membership:
+        return jsonify({'error':'You do not have access to this issue'}), 403
+
+    return jsonify(issue.to_dict_detailed()), 200
