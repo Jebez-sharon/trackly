@@ -46,6 +46,10 @@ def create_app():
 
     from routes.project_routes import project_bp
     app.register_blueprint(project_bp, url_prefix='/api')
+
+    from routes.comment_routes import comment_bp
+    app.register_blueprint(comment_bp, url_prefix='/api')
+
     return app
 
 
