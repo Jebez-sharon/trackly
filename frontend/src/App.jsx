@@ -2,6 +2,7 @@ import {Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Register from "./pages/Register";
+import Board from "./pages/Board";
 
 function ProtectedRoute({children}){
   const { user } = useAuth();
@@ -22,11 +23,7 @@ export default function App(){
       path="/board"
       element={
        <ProtectedRoute>
-        <div className="min-h-screen bg-gray-50 p-8">
-          <h1 className="text-2xl font-semibold">
-            Board (coming next)
-          </h1>
-        </div>
+        <Board />
        </ProtectedRoute>
       }
       />
