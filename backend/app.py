@@ -6,6 +6,7 @@ from flask import Flask
 from flask_jwt_extended import JWTManager
 from config import Config
 from models import db
+from flask_cors import CORS
 
 def create_app():
     # create_app() wraps everything in a function instead of
@@ -21,6 +22,8 @@ def create_app():
     # JWT_SECRET_KEY) had to be written in uppercase.
 
     app.config.from_object(Config)
+
+    CORS(app, origins=['http://localhost:5173'])
 
     # Connects the db object (defined in models.py) to this
     # specific Flask app instance.
