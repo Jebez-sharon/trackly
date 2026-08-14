@@ -5,6 +5,7 @@
 #their own config class if needed later
 
 import os
+from datetime import timedelta
 from dotenv import load_dotenv
 
 #load_dotenv() reads the .env file and makes its values available
@@ -15,6 +16,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
+
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=8)
     #os.environ.get('KEY') reads the value of KEY from the
     # environment. Since load_dotenv() loaded .env into the
     # environment above, this picks up DATABASE_URL and

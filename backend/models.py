@@ -161,7 +161,7 @@ class Label(db.Model):
 
 class Issue(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    issue_key = db.Column(db.String(20), unique=True, nullable=False)
+    issue_key = db.Column(db.String(20), index=True, nullable=False)
     title = db.Column(db.String(150), nullable=False)
     description = db.Column(db.Text, nullable=False)
     steps_to_reproduce = db.Column(db.Text, nullable=True)
@@ -202,6 +202,10 @@ class Issue(db.Model):
     )
     labels = db.relationship(
         'Label', secondary=issue_labels, back_populates='issues'
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint('project_id', 'issue_key', name='unique_issue_key_per_project'),     
     )
 
     def to_dict(self):
