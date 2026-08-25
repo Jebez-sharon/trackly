@@ -1,68 +1,31 @@
-# app.py — inside backend/
-# The application factory. This creates and configures the Flask
-# app, connects the database, sets up JWT, and registers routes.
-
-from flask import Flask
-from flask_jwt_extended import JWTManager
+from flask import Flask, jsonify
+from flask_cors import CORS
+from sqlalchemy import text
 from config import Config
 from models import db
-from flask_cors import CORS
 
 def create_app():
-    # create_app() wraps everything in a function instead of
-    # running it at import time. This is the "Application
-    # Factory" pattern — it lets you create multiple app
-    # instances with different configs (useful for testing later,
-    # where we'll want a separate test database).
     app = Flask(__name__)
-
-    # from_object() reads every uppercase attribute off the
-    # Config class and loads it into app.config. This is why
-    # Config's attributes (SQLALCHEMY_DATABASE_URI,
-    # JWT_SECRET_KEY) had to be written in uppercase.
-
     app.config.from_object(Config)
 
     CORS(app, origins=['http://localhost:5173'])
-
-    # Connects the db object (defined in models.py) to this
-    # specific Flask app instance.
     db.init_app(app)
 
-    # JWTManager is flask-jwt-extended's core object. Once
-    # initialized with the app, it knows how to create tokens
-    # (using JWT_SECRET_KEY from config) and verify them on
-    # protected routes.
-    jwt = JWTManager(app)
+    @app.route('/api/health')
+    def health():
+        return jsonify({'status': 'ok', 'message': 'Trackly API ready'}),200
 
-    # Blueprints group related routes together. We'll create
-    # auth_routes.py next — importing it here, inside create_app()
-    # rather than at the top of the file, avoids circular import
-    # issues (auth_routes.py will need to import 'db' from
-    # models.py, and models.py doesn't need to know about routes).
-
-    from routes.auth_routes import auth_bp
-    app.register_blueprint(auth_bp, url_prefix='/api/auth')
-
-    from routes.issue_routes import issue_bp
-    app.register_blueprint(issue_bp, url_prefix='/api')
-
-    from routes.project_routes import project_bp
-    app.register_blueprint(project_bp, url_prefix='/api')
-
-    from routes.comment_routes import comment_bp
-    app.register_blueprint(comment_bp, url_prefix='/api')
-
-    from routes.org_routes import org_bp
-    app.register_blueprint(org_bp, url_prefix='/api')
-
-    from routes.label_routes import label_bp
-    app.register_blueprint(label_bp , url_prefix='/api')
+    @app.route('/api/health/db')
+    def health_db():
+        try:
+            with db.engine.connect() as conn:
+                conn.execute(text('SELECT 1'))
+            return jsonify({'status':'ok', 'database':'connected'}),200
+        except Exception as exc:
+            return jsonify({'status':'error','database':str(exc)}), 503
 
     return app
 
-
 if __name__ == '__main__':
     app = create_app()
-    app.run(debug= True)
-
+    app.run(debug=True)
