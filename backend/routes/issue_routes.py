@@ -2,8 +2,9 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 
 from models import db, Issue, Project
-from routes.utils import current_user_id, get_membership, is_member
+from routes.utils import current_user_id, get_membership, is_member, issue_if_allowed
 from services.issue_service import create_issue, change_status, change_assignee
+
 
 issue_bp = Blueprint('issues',__name__, url_prefix='/api/projects')
 issue_detail_bp = Blueprint('issue_detail',__name__,url_prefix='/api/issues')
@@ -65,19 +66,10 @@ def add_issues(project_id):
 
     return jsonify(issue.to_dict()),201
 
-def _issue_if_allowed(issue_id):
-    issue = db.session.get(Issue, issue_id)
-    if issue is None:
-        return None, (jsonify({'error':'Issue not found'}), 404)
-
-    if get_membership(issue.project.organization_id) is None:
-        return None, (jsonify({'error':'You are not a member of this organization'}), 403)
-    return issue, None
-
 @issue_detail_bp.route('/<int:issue_id>',methods=['GET'])
 @jwt_required()
 def get_issue(issue_id):
-    issue, error = _issue_if_allowed(issue_id)
+    issue, error = issue_if_allowed(issue_id)
     if error:
         return error
     return jsonify(issue.to_dict_detailed()),200
@@ -85,7 +77,7 @@ def get_issue(issue_id):
 @issue_detail_bp.route('/<int:issue_id>',methods=['PATCH'])
 @jwt_required()
 def update_issue(issue_id):
-    issue,error = _issue_if_allowed(issue_id)
+    issue,error = issue_if_allowed(issue_id)
     if error:
         return error
 

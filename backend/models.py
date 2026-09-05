@@ -152,6 +152,13 @@ class Issue(db.Model):
         cascade='all, delete-orphan'
     )
 
+    comments = db.relationship(
+        'Comment',
+        backref='issue',
+        lazy=True,
+        cascade='all, delete-orphan',
+    )
+
     __table_args__ = (
         db.UniqueConstraint('project_id','issue_key',
                             name= 'unique_issue_key_per_project'),
@@ -174,11 +181,13 @@ class Issue(db.Model):
             'updated_at':self.updated_at.isoformat(),
             'reporter':self.reporter.to_dict(),
             'assignee':self.assignee.to_dict() if self.assignee else None,
+            'comment_count':len(self.comments),
         }
 
     def to_dict_detailed(self):
         data = self.to_dict()
         data['activities'] = [a.to_dict() for a in self.activities]
+        data['comments'] = [c.to_dict() for c in self.comments]
         return data
 
 
@@ -207,4 +216,25 @@ class IssueActivity(db.Model):
             'user':self.user.to_dict(),
         }
 
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow)
 
+    issue_id = db.Column(
+        db.Integer, db.ForeignKey('issue.id'), nullable=False, index=True
+    )
+
+    user_id = db.Column(
+        db.Integer, db.ForeignKey('user.id'), nullable=False, index=True
+    )
+
+    author = db.relationship('User', backref='comments')
+
+    def to_dict(self):
+        return {
+            'id':self.id,
+            'message':self.message,
+            'created_at':self.created_at.isoformat(),
+            'author':self.author.to_dict(),
+        }

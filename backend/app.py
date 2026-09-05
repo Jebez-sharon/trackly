@@ -26,6 +26,9 @@ def create_app():
     app.register_blueprint(issue_bp)
     app.register_blueprint(issue_detail_bp)
 
+    from routes.comment_routes import comment_bp
+    app.register_blueprint(comment_bp)
+
     @app.route('/api/health')
     def health():
         return jsonify({'status': 'ok', 'message': 'Trackly API ready'}),200
