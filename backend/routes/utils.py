@@ -28,3 +28,13 @@ def issue_if_allowed(issue_id):
             'error':'You are not a member of this organization'
         }),403)
     return issue , None
+
+def require_admin(org_id):
+    membership = get_membership(org_id)
+    if membership is None:
+        return jsonify({
+            'error':'You are not a member of this organization'
+        }),403
+    if membership.role != 'admin':
+        return jsonify({'error':'Only admins can do this'}),403
+    return None
