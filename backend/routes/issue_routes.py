@@ -12,6 +12,13 @@ issue_detail_bp = Blueprint('issue_detail',__name__,url_prefix='/api/issues')
 VALID_PRIORITIES = {'no_priority','low','medium','high','urgent'}
 VALID_SEVERITIES = {'low','medium','high','critical'}
 VALID_STATUSES = {'new','in-progress','ready-for-test','closed'}
+VALID_ISSUE_TYPES ={'bug','feature','task'}
+
+def _may_edit(issue):
+    membership = get_membership(issue.project.organization_id)
+    if membership is None:
+        return False
+    return membership.role == 'admin' or issue.assignee_id == current_user_id()
 
 def _project_if_allowed(project_id):
     project = db.session.get(Project, project_id)
@@ -56,12 +63,42 @@ def add_issues(project_id):
     if severity not in VALID_SEVERITIES:
         return jsonify({'error':f'severity must be one of {sorted(VALID_SEVERITIES)}'}),400
 
+    issue_type = data.get('issue_type') or 'bug'
+    if issue_type not in VALID_ISSUE_TYPES:
+        return jsonify({
+            'error':f'issue_type must be one of {sorted(VALID_ISSUE_TYPES)}'
+        }),400
+
+    category = data.get('category') if isinstance(data.get('category'), str) else 'general'
+    if len(category) > 30:
+        return jsonify({'error':'category must be 30 characters or fewer'}),400
+
+    steps = data.get('steps_to_reproduce')
+    if steps is not None and not isinstance(steps, str):
+        return jsonify({
+            'error':'steps_to_reproduce must be test or null'
+        }),400
+
+    assignee_id = data.get('assignee_id')
+    if assignee_id is not None:
+        if not isinstance(assignee_id, int):
+            return jsonify({
+                'error':'assignee_id must be a number or null'
+            }),400
+        if not is_member(project.organization_id, assignee_id):
+            return jsonify({
+                'error':'That user is not in this organization'
+            }),400
+
     issue = create_issue(project.id, current_user_id(),{
-        **data,
         'title':title,
         'description':description,
+        'steps_to_reproduce':steps,
+        'issue_type':issue_type,
         'priority':priority,
-        'severity':severity
+        'severity':severity,
+        'category':category,
+        'assignee_id':assignee_id,
     })
 
     return jsonify(issue.to_dict()),201
@@ -80,6 +117,10 @@ def update_issue(issue_id):
     issue,error = issue_if_allowed(issue_id)
     if error:
         return error
+    if not _may_edit(issue):
+        return jsonify({
+            'error':'Only an admin or the assignee can change this issue'
+        }),403
 
     data = request.get_json(silent=True) or {}
     user_id = current_user_id()

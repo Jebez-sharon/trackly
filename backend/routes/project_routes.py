@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 
 from models import db, Project
-from routes.utils import current_user_id, get_membership
+from routes.utils import current_user_id, get_membership, require_admin
 
 project_bp = Blueprint('projects',__name__,url_prefix='/api/organizations')
 
@@ -24,10 +24,9 @@ def listProjects(org_id):
 @project_bp.route('/<int:org_id>/projects', methods=['POST'])
 @jwt_required()
 def create_project(org_id):
-    if get_membership(org_id) is None:
-        return jsonify(
-            {'error':'You are not a member of this organization'}
-        ),403
+    error = require_admin(org_id)
+    if error:
+        return error
 
     data = request.get_json(silent=True) or {}
 
