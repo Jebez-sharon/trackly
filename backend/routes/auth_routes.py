@@ -55,6 +55,7 @@ def register():
 
     db.session.add_all([user, org])
     db.session.flush()  # assigns user.id and org.id without committing yet
+    org.created_by = user.id
 
     db.session.add(OrganizationMember(
         organization_id = org.id, user_id = user.id, role='admin'

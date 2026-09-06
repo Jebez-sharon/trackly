@@ -81,9 +81,14 @@ def change_role(org_id, member_id):
         return jsonify({
             'error':f'role must be one of {sorted(VALID_ROLES)}'
         }),400
-
+    if membership.user_id == membership.organization.created_by and role != 'admin':
+        return jsonify({
+            'error':'Cannot demote the organization owner'
+        }),400
+    
     if membership.role == 'admin' and role != 'admin' and _admin_count(org_id) == 1:
         return jsonify({'error':'Cannot demote the last admin'}),400
+
 
     membership.role = role
     db.session.commit()
@@ -102,8 +107,14 @@ def remove_member(org_id, member_id):
     if membership is None:
         return jsonify({'error':'Member not found'}),404
 
+    if membership.user_id == membership.organization.created_by:
+        return jsonify({
+            'error':'Cannot remove the organization owner'
+        }),400
+
     if membership.role == 'admin' and _admin_count(org_id)==1:
         return jsonify({'error':'Cannot remove the last admin'}),400
+    
 
     owned = Project.query.filter_by(
         organization_id = org_id, owner_id = membership.user_id

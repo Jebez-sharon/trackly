@@ -32,6 +32,7 @@ class Organization(db.Model):
     name=db.Column(db.String(100), nullable=False)
     slug= db.Column(db.String(50), unique=True, nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), default=utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True,index=True)
 
     memberships = db.relationship(
         'OrganizationMember',
@@ -54,6 +55,7 @@ class Organization(db.Model):
             'slug':self.slug,
             'member_count': len(self.memberships),
             'project_count':len(self.projects),
+            'created_by':self.created_by,
         }
 
 class OrganizationMember(db.Model):
