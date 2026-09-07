@@ -42,12 +42,16 @@ export default function Register(){
             await api.post('/api/auth/register',{
                 username, email, password , org_name:orgName, org_slug:slug,
             });
-            await login(email, password);
-            navigate('/board',{replace:true});
         }catch(err){
             setError(err.message);
-        }finally{
             setSubmitting(false);
+            return;
+        }
+        try{
+            await login(email, password);
+            navigate('/board',{replace:true});
+        }catch{
+            navigate('/login',{replace: true});
         }
     }
 
@@ -84,7 +88,7 @@ export default function Register(){
                         />
         
                         <Field 
-                            id="password" label="Password" type="password" autoComplete="new-password" requied 
+                            id="password" label="Password" type="password" autoComplete="new-password" required 
                             value={password} onChange={(e)=> setPassword(e.target.value)} hint="At least 8 characters."
                         />
 

@@ -38,7 +38,8 @@ api.interceptors.response.use(
     // 401 = expired or invalid token. 422 = malformed Authorization header.
     // Both mean the session is unusable, so drop it and go to /login —
     // unless we are already there, where a wrong password is a normal 401.
-    if ((status === 401 || status === 422) && window.location.pathname !== '/login'){
+    const onAuthPage = ['/login', '/register'].includes(window.location.pathname);
+    if ((status === 401 || status === 422) && !onAuthPage) {
         clearSession();
         window.location.replace('/login');
     }
