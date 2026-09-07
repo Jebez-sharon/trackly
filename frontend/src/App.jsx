@@ -1,61 +1,60 @@
-import {STATUS_ORDER, PRIORITY_ORDER, statusMeta, priorityMeta} from './lib/constants';
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import Login from "./pages/Login";
+import NotFound from "./pages/NotFound";
+import Register from "./pages/Register";
 
-export default function App() {
-  return (
+function RequireAuth({children}){
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? children :<Navigate to="/login" replace/>;
+}
+
+function RedirectIfAuthed({children}){
+  const{isAuthenticated} = useAuth();
+  return isAuthenticated ? <Navigate to="/board" replace /> : children;
+}
+
+// Temporary. Replaced by the real app shell in Chunk 15.
+function BoardPlaceholder(){
+  const {user, activeOrg, organizations, isAdmin, logout} = useAuth();
+  return(
     <div className="min-h-screen p-10">
-      <div className="max-w-2xl mx-auto space-y-8">
-        <div>
-          <h1 className="text-2xl font-semibold text-ink">Design tokens</h1>
-          <p className="text-sm text-ink-soft mt-1">
-            Inter ,Semantic colors ,and the status and priority maps.
-          </p>
-        </div>
-
-        <section className="bg-surface border border-line rounded-lg p-5">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted mb-3">Status</h2>
-          <div className="flex flex-wrap gap-2">
-            {STATUS_ORDER.map((key) => {
-              const s = statusMeta(key);
-              return(
-                <span key={key} className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium ${s.soft} ${s.text}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`}/>
-                  {s.label}
-                </span>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="bg-surface border border-line rounded-lg p-5">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted mb-3">Priority</h2>
-          <div className="flex flex-wrap gap-2">
-            {PRIORITY_ORDER.map((key) => {
-              const p = priorityMeta(key);
-              return(
-                <span key={key} className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium ${p.soft} ${p.text}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${p.dot}`}/>
-                  {p.label}
-                </span>
-              );
-            })}
-          </div>
-        </section>
-
-      <section className="bg-surface border border-line rounded-lg p-5 space-y-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wid text-ink-muted">
-          Brand and text
-        </h2>
-
-        <button className="px-3 py-1 5 rounded-md bg-brand text-white text-sm font-medium hover:bg-brand-hover transition-colors">
-          Primary button
-        </button>
-
-        <p className="text-sm text-ink">Primary text at 14px</p>
-        <p className="text-[13px] text-ink-soft">Secondary text at 13px</p>
-        <p className="text-xs text-ink-muted">Metadata at 12px</p>
-        <p className="text-xs text-ink-muted">Unknown value falls back safely:{statusMeta('nonsense').label}</p>
-      </section>
+      <div className="max-w-lg mx-auto">
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">
+          Signed in
+        </h1>
+        <dl className="mt-6 rounded-lg border border-line bg-surface divide-y divide-line">           {[
+            ['User',user?.username],
+            ['Email',user?.email],
+            ['Active organization',activeOrg?.name],
+            ['Role here',activeOrg?.role],
+            ['Admin',String(isAdmin)],
+            ['Organizations', organizations.length],
+          ].map(([label, value])=>(
+            <div className="flex justify-between px4 py-2.5" key={label}>
+              <dt className="text-[13px] text-ink-soft">{label}</dt>
+              <dd className="text-[13px] font-medium text-ink">{String(value)}</dd>
+            </div>
+          ))}
+        </dl>
+        <button className="mt-6 rounded-md border border-line bg-surface px-3 py-2 text-sm font-medium text-ink transition-colors hover:border-line-strong" onClick={logout}>
+          Sign out</button>
       </div>
     </div>
   );
+}
+
+export default function App(){
+  return(
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<Navigate to='/board' replace/>}/>
+          <Route path="/login" element={<RedirectIfAuthed><Login /></RedirectIfAuthed>}/>
+          <Route path="/register" element={<RedirectIfAuthed><Register /></RedirectIfAuthed>}/>
+          <Route path="/board" element={<RequireAuth><BoardPlaceholder /></RequireAuth>}/>            <Route path="*" element={<NotFound/>}/>
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
+  )
 }
