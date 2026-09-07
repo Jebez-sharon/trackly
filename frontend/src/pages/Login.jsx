@@ -19,7 +19,7 @@ export default function Login(){
         setError('');
         setSubmitting(true);
         try{
-            await login(email, password);
+            await login(email.trim(), password);
             navigate('/board',{ replace:true});
         }catch(err){
             setError(err.message);

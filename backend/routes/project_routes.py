@@ -39,7 +39,7 @@ def create_project(org_id):
             'error':'Name and key are required'
         }), 400
 
-    if not key.isalnum() and len(key) > 10:
+    if not key.isalnum() or not (1 <= len(key) <= 10):
         return jsonify({
             'error':'Key must be 1-10 letters or digits'
         }),400
