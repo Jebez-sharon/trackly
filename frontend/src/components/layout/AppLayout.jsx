@@ -47,6 +47,12 @@ export default function AppLayout(){
 
     return(
         <div className="min-h-screen lg:flex">
+            <a href="#main"
+                className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50
+                    focus:rounded-lg focus:bg-brand focus:px-4 focus:py-2 focus:text-sm
+                    focus:font-medium focus:text-white">
+                Skip to content
+            </a>
             <aside className="hidden lg:block lg:w-60 lg:shrink-0 lg:border-r lg:border-line">
                 <div className="sticky top-0 h-screen">
                     <Sidebar />
@@ -62,9 +68,9 @@ export default function AppLayout(){
                 </div>
             )}
 
-            <div className="min-w-0 flex-1">
+            <main id="main" className="min-w-0 flex-1">
                 <Outlet context={{ openMenu: openDrawer}}/>
-            </div>
+            </main>
         </div>
     )
 }

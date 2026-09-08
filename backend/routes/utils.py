@@ -1,4 +1,4 @@
-from flask import jsonify
+from flask import jsonify,request
 from flask_jwt_extended import get_jwt_identity
 
 from models import db,Issue,OrganizationMember
@@ -38,3 +38,15 @@ def require_admin(org_id):
     if membership.role != 'admin':
         return jsonify({'error':'Only admins can do this'}),403
     return None
+
+def json_body():
+    """Always returns a dict.
+
+    request.get_json() returns whatever valid JSON was sent — including a
+    list or a number. `or {}` does not catch that, because a non-empty list
+    is truthy, so `data.get(...)` then raises AttributeError and Flask
+    returns an unhandled 500. On /api/auth/login that is reachable with no
+    credentials at all.
+    """
+    data= request.get_json(silent=True)
+    return data if isinstance(data, dict) else {}

@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 
 from models import db,Comment
-from routes.utils import current_user_id, issue_if_allowed
+from routes.utils import current_user_id, issue_if_allowed,json_body
 
 comment_bp = Blueprint('comments', __name__, url_prefix='/api/issues')
 
@@ -25,7 +25,7 @@ def add_comment(issue_id):
     if error:
         return error
 
-    data = request.get_json(silent=True) or {}
+    data = json_body()
     message = data.get('message').strip() if isinstance(data.get('message') , str) else ''
 
     if not message:

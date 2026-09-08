@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
+from routes.utils import json_body
 
 from models import db, Project
 from routes.utils import current_user_id, get_membership, require_admin
@@ -28,8 +29,7 @@ def create_project(org_id):
     if error:
         return error
 
-    data = request.get_json(silent=True) or {}
-
+    data = json_body()
     name= data.get('name').strip() if isinstance(data.get('name'), str) else ''
     key = data.get('key').strip().upper() if isinstance(data.get('key'), str) else ''
     description = data.get('description').strip() if isinstance (data.get('description'),str) else None

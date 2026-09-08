@@ -4,7 +4,7 @@ export default function AuthLayout({title, subtitle, children, footer}){
     return(
         <div className="relative min-h-screen flex items-center justify-center px-4 py-12">
         <div className="pointer-events-none absolute inset-0 auth-grid" aria-hidden="true" />
-            <div className="relative w-full max-w-[400px]">
+            <main className="relative w-full max-w-[400px]">
                 <div className="flex items-center justify-center gap-2 mb-7">
                     <span className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-brand text-white shadow-sm">
                         <Logo className="w-[18px] h-[18px]"/>
@@ -20,7 +20,7 @@ export default function AuthLayout({title, subtitle, children, footer}){
             </div>
 
             <p className="mt-5 text-center text-[13px] text-ink-soft">{footer}</p>
-            </div>
+            </main>
         
     </div>
     )

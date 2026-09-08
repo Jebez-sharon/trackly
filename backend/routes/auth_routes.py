@@ -2,7 +2,7 @@
 
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token
-
+from routes.utils import json_body
 from models import db, User, Organization, OrganizationMember
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
@@ -12,8 +12,7 @@ def _clean(value):
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
-    data = request.get_json(silent=True) or {}
-
+    data = json_body()
     username = _clean(data.get('username'))
     email = _clean(data.get('email')).lower()
     password = data.get('password') if isinstance(data.get('password'), str) else ''
@@ -71,8 +70,7 @@ def register():
 
 @auth_bp.route('/login',methods=['POST'])
 def login():
-    data = request.get_json(silent=True) or {}
-
+    data = json_body()
     email = _clean(data.get('email')).lower()
     password = data.get('password') if isinstance(data.get('password'), str) else ''
 

@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 
 from models import db, OrganizationMember, Project, User
-from routes.utils import get_membership, require_admin
+from routes.utils import get_membership, require_admin,json_body
 
 org_bp = Blueprint('organizations',__name__, url_prefix='/api/organizations')
 
@@ -33,7 +33,7 @@ def add_member(org_id):
     if error:
         return error
 
-    data = request.get_json(silent=True) or {}
+    data = json_body()
     email = data.get('email').strip().lower() if isinstance(data.get('email') , str) else ''
     role = data.get('role') or 'member'
 
@@ -75,7 +75,7 @@ def change_role(org_id, member_id):
     if membership is None:
         return jsonify({'error':'Member not found'}),404
 
-    data = request.get_json(silent=True) or {}
+    data = json_body()
     role = data.get('role')
     if role not in VALID_ROLES:
         return jsonify({

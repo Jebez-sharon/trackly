@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 
 from models import db, Issue, Project
-from routes.utils import current_user_id, get_membership, is_member, issue_if_allowed
+from routes.utils import current_user_id, get_membership, is_member, issue_if_allowed, json_body
 from services.issue_service import create_issue, change_status, change_assignee
 
 
@@ -47,7 +47,7 @@ def add_issues(project_id):
     if error:
         return error
 
-    data = request.get_json(silent=True) or {}
+    data = json_body()
 
     title = data.get('title').strip() if isinstance(data.get('title'), str) else ''
     description = data.get('description').strip() if isinstance(data.get('description'), str) else ''
@@ -122,8 +122,13 @@ def update_issue(issue_id):
             'error':'Only an admin or the assignee can change this issue'
         }),403
 
-    data = request.get_json(silent=True) or {}
+    data = json_body()
     user_id = current_user_id()
+
+    if 'status' not in data  and 'assignee_id' not in data:
+        return jsonify({
+            'error':'Provide status and/or assignee_id'
+        }),400
 
     if 'status' in data:
         status = data['status']

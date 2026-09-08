@@ -9,6 +9,7 @@ export const ACTIVE_ORG_KEY ='trackly_active_org';
 // Create frontend/.env.local later with VITE_API_URL=... for production.
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+    timeout:15000,
 });
 
 // Attach the token to every request
