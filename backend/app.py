@@ -1,11 +1,43 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from werkzeug.exceptions import HTTPException
 from config import Config
 from models import db
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended  import JWTManager
 
 jwt = JWTManager()
+
+def register_error_handlers(app):
+    """Every failure leaves this API as JSON, never HTML.
+
+    Without these, an unhandled exception returns Werkzeug's HTML error
+    page. The frontend reads `data.error || data.msg`, finds neither in
+    HTML, and shows "Request failed with status code 500" with no cause.
+    """
+
+    @app.errorhandler(HTTPException)
+    def handle_http_exception(e):
+        return jsonify({'error':e.description}), e.code
+
+    @app.errorhandler(IntegrityError)
+    def handle_integrity_error(e):
+        db.session.rollback()
+        app.logger.warning('IntegrityError on %s %s', request.method, request.path)
+        return jsonify({'error':'That conflicts with something that already exists.'}),409
+
+    @app.errorhandler(SQLAlchemyError)
+    def handle_db_error(e):
+        db.session.rollback()
+        app.logger.exception('Database error on %s %s', request.method, request.path)
+        return jsonify({'error':'A database error occurred.'}), 500
+
+    @app.errorhandler(Exception)
+    def handle_unexpected(e):
+        db.session.rollback()
+        app.logger.exception('Unhandled error on %s %s', request.method, request.path)
+        return jsonify({'error':'Something went wrong on our side.'}), 500
 
 def create_app():
     app = Flask(__name__)
@@ -32,6 +64,8 @@ def create_app():
     from routes.org_routes import org_bp
     app.register_blueprint(org_bp)
 
+    register_error_handlers(app)
+
     @app.route('/api/health')
     def health():
         return jsonify({'status': 'ok', 'message': 'Trackly API ready'}),200
@@ -42,9 +76,9 @@ def create_app():
             with db.engine.connect() as conn:
                 conn.execute(text('SELECT 1'))
             return jsonify({'status':'ok', 'database':'connected'}),200
-        except Exception as exc:
-            return jsonify({'status':'error','database':str(exc)}), 503
-
+        except Exception:
+            app.logger.exception('Database health check failed')
+            return jsonify({'status':'error','database':'unreachable'}),503
     return app
 
 if __name__ == '__main__':
