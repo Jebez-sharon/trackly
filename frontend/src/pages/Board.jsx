@@ -1,3 +1,5 @@
+import { useState } from "react";
+import IssueDrawer from "../components/issues/IssueDrawer";
 import Header from "../components/layout/Header";
 import { Navigate, useOutletContext, useParams } from "react-router-dom";
 import { useAuth } from "../context/auth-context";
@@ -5,11 +7,12 @@ import { useProjects } from "../context/projects-context";
 import useFetch from "../lib/useFetch";
 import {statusMeta, priorityMeta} from '../lib/constants'
 
-function IssueRow({issue}){
+function IssueRow({issue, onOpen}){
     const s = statusMeta(issue.status);
     const p = priorityMeta(issue.priority)
     return(
-        <tr className="border-b border-line last:border-b-0 hover:bg-canvas">
+        <tr onClick={() => onOpen(issue.id)}
+            className="cursor-pointer border-b border-line last:border-b-0 hover:bg-canvas">
             <td className="px-4 py-3 align-top">
                 <span className="font-mono text-[12px] font-medium text-ink-muted">
                     {issue.issue_key}
@@ -17,9 +20,10 @@ function IssueRow({issue}){
             </td>
 
             <td className="px-4 py-3 align-top">
-                <span className="block text-[13px] font-medium text-ink">
+                <button type="button" onClick={() => onOpen(issue.id)}
+                    className="block rounded text-left text-[13px] font-medium text-ink hover:text-brand">
                     {issue.title}
-                </span>
+                </button>
                 {issue.comment_count > 0 && (
                     <span className="mt-0.5 block text-xs text-ink-muted">
                         {issue.comment_count} comment{issue.comment_count === 1 ? "" : "s"}
@@ -63,6 +67,7 @@ export default function Board(){
     const {activeOrg} = useAuth();
     const {projects, loading:projectsLoading, error:projectsError} = useProjects();
     const {projectId} = useParams()
+        const [openIssueId, setOpenIssueId] = useState(null);
 
     const current = projectId ? projects.find((p) => String(p.id) === projectId)
     : null;
@@ -149,13 +154,13 @@ export default function Board(){
 
                                 <tbody>
                                     {issues.data.map((issue)=>(
-                                        <IssueRow key={issue.id} issue={issue}/>
+                                        <IssueRow key={issue.id} issue={issue} onOpen={setOpenIssueId}/>
                                     ))}
                                 </tbody>
                             </table>
                         </div>
                     )}
-                    
+                    <IssueDrawer issueId={openIssueId} onClose={()=> setOpenIssueId(null)}/>
                     </>
                 )}
             </div>

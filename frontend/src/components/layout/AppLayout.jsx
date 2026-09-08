@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import useFocusTrap from "../../hooks/useFocusTrap";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import { ProjectsProvider } from "../../context/ProjectContext";
@@ -6,46 +7,7 @@ import { ProjectsProvider } from "../../context/ProjectContext";
 
 export default function AppLayout(){
     const[drawerOpen, setDrawerOpen] = useState(false);
-    const drawerRef = useRef(null);
-    const lastFocused = useRef(null);
-
-    function openDrawer(){
-        lastFocused.current = document.activeElement;
-        setDrawerOpen(true);
-    }
-
-    useEffect(() => {
-        if(!drawerOpen) return;
-
-        const node = drawerRef.current;
-        const SELECTOR = 'a[href], button:not([disabled]), select,input, [tabindex]:not([tabindex="-1"])'
-        const focusables = () => [...node.querySelectorAll(SELECTOR)];
-
-        focusables()[0]?.focus();
-
-        const onKey = (e) => {
-            if (e.key === "Escape") {setDrawerOpen(false); return;}
-        if(e.key !== "Tab")return;
-
-            const items = focusables();
-            if(!items.length) return;
-            const first = items[0], last = items[items.length -1];
-            if (e.shiftKey && document.activeElement === first) {
-                e.preventDefault();
-                last.focus();
-            } else if (!e.shiftKey && document.activeElement === last) {
-                e.preventDefault();
-                first.focus();
-            }
-            };
-        document.addEventListener("keydown", onKey);
-        document.body.style.overflow = "hidden";
-        return () => {
-            document.removeEventListener("keydown", onKey);
-            document.body.style.overflow = "";
-            lastFocused.current?.focus();
-        };
-    }, [drawerOpen]);
+    const drawerRef = useFocusTrap(drawerOpen, ()=> setDrawerOpen(false));
 
     return(
         <ProjectsProvider>
@@ -65,14 +27,13 @@ export default function AppLayout(){
             {drawerOpen && (
                 <div className="lg:hidden">
                     <div className="fixed inset-0 z-30 bg-ink/20" onClick={() => setDrawerOpen(false)} aria-hidden="true"/>
-                    <div ref={drawerRef} className="fixed inset-y-0 left-0 z-40 w-64 border-r border-line shadow-xl" role="dialog" aria-modal="true" aria-label="Navigation">
-                        <Sidebar onNavigate={() => setDrawerOpen(false)} />
+                    <div ref={drawerRef} tabIndex={-1} className="fixed inset-y-0 left-0 z-40 w-64 border-r border-line shadow-xl" role="dialog" aria-modal="true" aria-label="Navigation">                        <Sidebar onNavigate={() => setDrawerOpen(false)} />
                     </div>
                 </div>
             )}
 
             <main id="main" className="min-w-0 flex-1">
-                <Outlet context={{ openMenu: openDrawer}}/>
+                <Outlet context={{ openMenu: ()=> setDrawerOpen(true)}}/>
             </main>
         </div>
         </ProjectsProvider>
