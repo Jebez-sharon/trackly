@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
+from sqlalchemy.orm import selectinload
 
 from models import db, Issue, Project
 from routes.utils import current_user_id, get_membership, is_member, issue_if_allowed, json_body
@@ -35,7 +36,10 @@ def list_issues(project_id):
     if error:
         return error
 
-    issues = Issue.query.filter_by(
+    issues = Issue.query.options(
+        selectinload(Issue.reporter),
+        selectinload(Issue.assignee),
+    ).filter_by(
         project_id=project.id
     ).order_by(Issue.id).all()
     return jsonify([i.to_dict() for i in issues]),200

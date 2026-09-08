@@ -1,4 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import select, func
+from sqlalchemy.orm import column_property
 from datetime import datetime, timezone
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -183,7 +185,7 @@ class Issue(db.Model):
             'updated_at':self.updated_at.isoformat(),
             'reporter':self.reporter.to_dict(),
             'assignee':self.assignee.to_dict() if self.assignee else None,
-            'comment_count':len(self.comments),
+            'comment_count':self.comment_count,
         }
 
     def to_dict_detailed(self):
@@ -240,3 +242,10 @@ class Comment(db.Model):
             'created_at':self.created_at.isoformat(),
             'author':self.author.to_dict(),
         }
+
+Issue.comment_count = column_property(
+    select(func.count(Comment.id))
+    .where(Comment.issue_id == Issue.id)
+    .correlate_except(Comment)
+    .scalar_subquery()
+)
