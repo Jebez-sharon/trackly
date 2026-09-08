@@ -1,6 +1,6 @@
 import Header from "../components/layout/Header";
-import { useAuth } from "../context/AuthContext";
 import { useOutletContext } from "react-router-dom";
+import { useAuth } from "../context/auth-context";
 
 export default function Board(){
     const {openMenu} = useOutletContext();

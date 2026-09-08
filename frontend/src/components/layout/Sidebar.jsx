@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
 import Logo from "../Logo";
+import { useAuth } from "../../context/auth-context";
 
 const NAV = [
     {to:"/board", label:"Board"},

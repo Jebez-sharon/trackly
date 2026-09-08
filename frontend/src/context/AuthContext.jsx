@@ -1,7 +1,6 @@
-import {createContext, useContext, useMemo, useState} from 'react'
+import { useMemo, useState } from 'react'
+import { AuthContext } from './auth-context';
 import api, {TOKEN_KEY, USER_KEY, ORGS_KEY, ACTIVE_ORG_KEY, clearSession} from '../lib/api';
-
-const AuthContext = createContext(null);
 
 function readJson(key){
     try{
@@ -67,10 +66,4 @@ export function AuthProvider({children}){
         };
     },[user, organizations, activeOrgId]);
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
-
-export function useAuth(){
-    const ctx= useContext(AuthContext);
-    if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>');
-    return ctx;
 }

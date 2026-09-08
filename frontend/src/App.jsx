@@ -1,11 +1,12 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { AuthProvider, useAuth } from "./context/AuthContext";
+import { AuthProvider } from "./context/AuthContext";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import Register from "./pages/Register";
 import AppLayout from "./components/layout/AppLayout";
 import Board from "./pages/Board";
 import Team from "./pages/Team";
+import { useAuth } from "./context/auth-context";
 
 function RequireAuth({children}){
   const { isAuthenticated } = useAuth();

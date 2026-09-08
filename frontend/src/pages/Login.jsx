@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from 'react-router-dom'
-import {useAuth} from '../context/AuthContext'
 import AuthLayout from "../components/AuthLayout";
 import Field from "../components/Field";
 import Button from "../components/Button";
+import { useAuth } from "../context/auth-context";
 
 export default function Login(){
     const { login } = useAuth();

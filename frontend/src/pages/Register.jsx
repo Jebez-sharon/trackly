@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
-import { useAuth } from "../context/AuthContext";
 import AuthLayout from "../components/AuthLayout";
 import Field from "../components/Field";
 import Button from "../components/Button";
+import { useAuth } from "../context/auth-context";
+
 
 function slugify(value){
     return value.toLowerCase().trim()
