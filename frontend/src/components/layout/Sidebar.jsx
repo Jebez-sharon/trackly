@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import Logo from "../Logo";
 import { useAuth } from "../../context/auth-context";
+import { useProjects } from "../../context/projects-context";
 
 const NAV = [
     {to:"/board", label:"Board"},
@@ -9,7 +10,7 @@ const NAV = [
 
 export default function Sidebar({onNavigate}){
     const {user, activeOrg, activeOrgId, organizations, switchOrg, logout} = useAuth();
-
+    const {projects, loading:projectsLoading, error:projectsError} = useProjects()
     return (
         <div className="flex h-full flex-col bg-surface">
             <div className="flex h-14 items-center gap-2 border-b border-line px-4">
@@ -71,6 +72,46 @@ export default function Sidebar({onNavigate}){
                     ))}
                 </ul>
             </nav>
+
+            <div className="px-3 pb-3">
+                <p className="px-1 text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
+                    Projects
+                    </p>
+
+                    {projectsLoading && (
+                        <p className="mt-2 px-1 text-xs text-ink-muted">Loading</p>
+                    )}
+
+                    {!projectsLoading && projectsError && (
+                        <p className="mt-2 px-1 text-xs text-ink-muted">Could not load projects.</p>
+                    )}
+
+                    {!projectsLoading && !projectsError && (
+                        projects.length ? (
+                            <ul className="mt-1.5 space-y-0.5">
+                                {projects.map((p) => (
+                                    <li key={p.id}>
+                                        <NavLink 
+                                            to={`/board/${p.id}`}
+                                            onClick={onNavigate}
+                                            className={({isActive}) =>
+                                            `flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] transition-colors ${
+                                                isActive
+                                                    ? "bg-canvas font-medium text-ink"
+                                                    : "text-ink-soft hover:bg-canvas hover:text-ink"
+                                            }`}
+                                        >
+                                            <span className="shrink-0 rounded bg-canvas px-1 font-mono text-[10px] font-medium text-ink-muted">{p.key}</span>
+                                            <span className="truncate">{p.name}</span>
+                                        </NavLink>
+                                    </li>
+                                ))}
+                            </ul>
+                        ):(
+                            <p className="mt-2 px-1 text-xs text-ink-muted">No projects yet.</p>
+                        )
+                    )}
+            </div>
 
             <div className="border-t border-line p-3">
                 <div className="flex items-center gap-2.5 px-1">

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
+import { ProjectsProvider } from "../../context/ProjectContext";
+
 
 export default function AppLayout(){
     const[drawerOpen, setDrawerOpen] = useState(false);
@@ -46,7 +48,8 @@ export default function AppLayout(){
     }, [drawerOpen]);
 
     return(
-        <div className="min-h-screen lg:flex">
+        <ProjectsProvider>
+            <div className="min-h-screen lg:flex">
             <a href="#main"
                 className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50
                     focus:rounded-lg focus:bg-brand focus:px-4 focus:py-2 focus:text-sm
@@ -72,5 +75,6 @@ export default function AppLayout(){
                 <Outlet context={{ openMenu: openDrawer}}/>
             </main>
         </div>
+        </ProjectsProvider>
     )
 }
