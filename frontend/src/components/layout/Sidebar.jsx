@@ -53,7 +53,8 @@ export default function Sidebar({onNavigate}){
                         )
                     }
             </div>
-            <nav className="mt-5 flex-1 px-3">
+            <div className="mt-5 min-h-0 flex-1 overflow-y-auto">
+                <nav className="px-3">
                 <ul className="space-y-0.5">
                     {NAV.map((item)=>(
                         <li
@@ -73,7 +74,7 @@ export default function Sidebar({onNavigate}){
                 </ul>
             </nav>
 
-            <div className="px-3 pb-3">
+            <div className="mt-6 px-3">
                 <p className="px-1 text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
                     Projects
                     </p>
@@ -111,6 +112,7 @@ export default function Sidebar({onNavigate}){
                             <p className="mt-2 px-1 text-xs text-ink-muted">No projects yet.</p>
                         )
                     )}
+            </div>
             </div>
 
             <div className="border-t border-line p-3">

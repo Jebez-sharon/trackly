@@ -31,6 +31,7 @@ export default function App(){
           <Route path="/register" element={<RedirectIfAuthed><Register /></RedirectIfAuthed>}/>
           <Route element={<RequireAuth><AppLayout/></RequireAuth>}>
             <Route path="/board" element={<Board/>}/>
+            <Route path="/board/:projectId" element={<Board/>}/>
           <Route path="/team" element={<Team/>}/>
           </Route>
           <Route path="*" element={<NotFound/>}/>
