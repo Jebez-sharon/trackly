@@ -32,6 +32,7 @@ export default function App(){
           <Route element={<RequireAuth><AppLayout/></RequireAuth>}>
             <Route path="/board" element={<Board/>}/>
             <Route path="/board/:projectId" element={<Board/>}/>
+            <Route path="/board/:projectId/issues/:issueId" element={<Board/>}/>
           <Route path="/team" element={<Team/>}/>
           </Route>
           <Route path="*" element={<NotFound/>}/>

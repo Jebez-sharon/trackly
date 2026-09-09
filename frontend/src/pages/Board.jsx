@@ -1,7 +1,7 @@
 import { useState } from "react";
 import IssueDrawer from "../components/issues/IssueDrawer";
 import Header from "../components/layout/Header";
-import { Navigate, useOutletContext, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { useAuth } from "../context/auth-context";
 import { useProjects } from "../context/projects-context";
 import useFetch from "../lib/useFetch";
@@ -25,7 +25,10 @@ function IssueRow({ issue, onOpen }) {
       <td className="px-4 py-3 align-top">
         <button
           type="button"
-          onClick={() => onOpen(issue.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpen(issue.id);
+          }}
           className="block rounded text-left text-body font-medium text-ink hover:text-brand"
         >
           {issue.title}
@@ -92,9 +95,14 @@ export default function Board() {
     openNewProject,
     refetch: refetchProjects,
   } = useProjects();
-  const { projectId } = useParams();
-  const [openIssueId, setOpenIssueId] = useState(null);
+  const { projectId, issueId } = useParams();
   const [creatingIssue, setCreatingIssue] = useState(false);
+  const navigate = useNavigate();
+
+  const openIssue = (id) => navigate(`/board/${projectId}/issues/${id}`);
+  // replace, so closing does not leave the issue sitting in history where Back
+  // would immediately reopen it.
+  const closeIssue = () => navigate(`/board/${projectId}`, { replace: true });
 
   const current = projectId
     ? projects.find((p) => String(p.id) === projectId)
@@ -251,7 +259,7 @@ export default function Board() {
                         <IssueRow
                           key={issue.id}
                           issue={issue}
-                          onOpen={setOpenIssueId}
+                          onOpen={openIssue}
                         />
                       ))}
                     </tbody>
@@ -259,8 +267,8 @@ export default function Board() {
                 </div>
               )}
             <IssueDrawer
-              issueId={openIssueId}
-              onClose={() => setOpenIssueId(null)}
+              issueId={issueId}
+              onClose={closeIssue}
               onIssueChanged={patchIssue}
             />
             <NewIssueDialog 
