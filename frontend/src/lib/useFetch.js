@@ -18,7 +18,7 @@ export default function useFetch(path){
     setLoading(Boolean(path)); 
   }
 
-  const run = useCallback(async () => {
+  const run = useCallback(async (opts) => {
     controllerRef.current?.abort();
 
     if (!path){
@@ -31,7 +31,7 @@ export default function useFetch(path){
 
     setError(null)
     setErrorStatus(null)
-    setLoading(true)
+    if (!opts?.quiet)setLoading(true)
     try{
       const {data:body} = await api.get(path,{signal:controller.signal});
       if (!controller.signal.aborted) setData(body);
