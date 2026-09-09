@@ -12,6 +12,7 @@ import { useMemo, useRef, useState } from "react";
 import api from "../../lib/api";
 import { useAuth } from "../../context/auth-context";
 import ConfirmDialog from "../ui/ConfirmDialog";
+import EditIssueDialog from "./EditIssueDialog";
 
 function formatDate(iso) {
   if (!iso) return "";
@@ -26,6 +27,21 @@ function formatDate(iso) {
   });
 }
 
+const FIELD_LABELS = {
+  title: "title",
+  description: "description",
+  steps_to_reproduce: "steps to reproduce",
+  issue_type: "type",
+  priority: "priority",
+  severity: "severity",
+};
+
+// "title", "title and priority", "title, priority and severity"
+function joinFields(list) {
+  if (list.length <= 1) return list[0] ?? "";
+  return `${list.slice(0, -1).join(", ")} and ${list[list.length - 1]}`;
+}
+
 function activityText(a, nameOf) {
   switch (a.action) {
     case "created":
@@ -36,6 +52,16 @@ function activityText(a, nameOf) {
       return `assigned this to ${nameOf(a.new_value)}`;
     case "unassigned":
       return `unassigned this from ${nameOf(a.old_value)}`;
+    case "edited": {
+      // old_value and new_value are String(100), so the server records which
+      // fields moved rather than a diff.
+      const fields = (a.extra_data?.fields ?? []).map(
+        (f) => FIELD_LABELS[f] || f.replace(/_/g, " "),
+      );
+      return fields.length
+        ? `edited the ${joinFields(fields)}`
+        : "edited this issue";
+    }
     default:
       return a.action.replace(/_/g, " ");
   }
@@ -196,10 +222,11 @@ export default function IssueDrawer({
 }) {
   const open = Boolean(issueId);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  // The drawer and the confirm dialog both listen for Escape on document, so
-  // a single keypress would close both. While the confirm is open it owns Escape.
+  const [editOpen, setEditOpen] = useState(false);
+  // The drawer and any dialog it opens all listen for Escape on document, so a
+  // single keypress would close both. While one is open, it owns Escape.
   const panelRef = useFocusTrap(open, () => {
-    if (!confirmOpen) onClose();
+    if (!confirmOpen && !editOpen) onClose();
   });
   const {
     data: issue,
@@ -238,6 +265,24 @@ export default function IssueDrawer({
   // Deliberately stricter than canEdit, matching delete_issue on the server:
   // an assignee moves an issue along, an admin destroys it.
   const canDelete = Boolean(issue) && activeOrg?.role === "admin";
+
+  // Mirrors _may_edit_content: the reporter can correct what their own issue
+  // says, even though they cannot reassign or close it.
+  const canEditContent =
+    canEdit || (Boolean(issue) && issue.reporter?.id === user?.id);
+
+  function handleSaved(updated) {
+    setEditOpen(false);
+    // The PATCH response is to_dict_detailed, so it already carries the new
+    // activity row and the comments - no refetch needed.
+    setIssue(updated);
+    onIssueChanged?.(updated.id, {
+      title: updated.title,
+      priority: updated.priority,
+      issue_type: updated.issue_type,
+      severity: updated.severity,
+    });
+  }
 
   async function deleteIssue() {
     await api.delete(`/api/issues/${issue.id}`);
@@ -287,6 +332,16 @@ export default function IssueDrawer({
             {issue?.issue_key || "Issue"}
           </span>
           <div className="flex items-center gap-1">
+          {canEditContent && (
+            <button
+              type="button"
+              onClick={() => setEditOpen(true)}
+              className="rounded-lg px-2.5 py-1.5 text-body font-medium text-ink-soft
+                         transition-colors hover:bg-surface-hover hover:text-ink"
+            >
+              Edit
+            </button>
+          )}
           {canDelete && (
             <button
               type="button"
@@ -536,6 +591,18 @@ export default function IssueDrawer({
           )}
         </div>
       </div>
+
+      {issue && (
+        <EditIssueDialog
+          // Remount on open so the form re-seeds from the current issue rather
+          // than holding whatever was typed the last time it was cancelled.
+          key={`${issue.id}-${editOpen}`}
+          open={editOpen}
+          issue={issue}
+          onClose={() => setEditOpen(false)}
+          onSaved={handleSaved}
+        />
+      )}
 
       <ConfirmDialog
         open={confirmOpen}
