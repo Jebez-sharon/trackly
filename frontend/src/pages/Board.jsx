@@ -306,6 +306,9 @@ export default function Board() {
               onClose={closeIssue}
               onIssueChanged={patchIssue}
               onIssueDeleted={handleIssueDeleted}
+              // Prev/next walks the list in the order it is displayed.
+              siblingIds={(issues.data ?? []).map((i) => i.id)}
+              onNavigate={openIssue}
             />
             <ConfirmDialog
               open={confirmDeleteProject}
