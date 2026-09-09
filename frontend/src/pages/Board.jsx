@@ -10,6 +10,66 @@ import NewIssueDialog from "../components/issues/NewIssueDialog";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 import api from "../lib/api";
 
+// Below sm the table becomes cards. A five-column table inside a horizontal
+// scroller is the worst thing you can hand someone on a phone, and three of
+// the five columns were hidden at that width anyway.
+function IssueCard({ issue, onOpen }) {
+  const s = statusMeta(issue.status);
+  const p = priorityMeta(issue.priority);
+  return (
+    <li
+      onClick={() => onOpen(issue.id)}
+      className="cursor-pointer px-4 py-3 transition-colors hover:bg-surface-hover"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <span className="font-mono text-meta font-medium text-ink-muted">
+          {issue.issue_key}
+        </span>
+        <span
+          className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-0.5 text-meta font-medium ${s.soft} ${s.text}`}
+        >
+          <span
+            className={`h-1.5 w-1.5 shrink-0 rounded-full ${s.dot}`}
+            aria-hidden="true"
+          />
+          {s.label}
+        </span>
+      </div>
+
+      <button
+        type="button"
+        onClick={(e) => {
+          // The card also handles clicks; without this the issue opens twice
+          // and pushes two history entries.
+          e.stopPropagation();
+          onOpen(issue.id);
+        }}
+        className="mt-1 block rounded text-left text-body font-medium text-ink hover:text-brand"
+      >
+        {issue.title}
+      </button>
+
+      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-meta text-ink-muted">
+        <span className={`inline-flex items-center gap-1.5 font-medium ${p.text}`}>
+          <span
+            className={`h-1.5 w-1.5 shrink-0 rounded-full ${p.dot}`}
+            aria-hidden="true"
+          />
+          {p.label}
+        </span>
+        <span>
+          {issue.assignee ? issue.assignee.username : "Unassigned"}
+        </span>
+        {issue.comment_count > 0 && (
+          <span>
+            {issue.comment_count} comment{issue.comment_count === 1 ? "" : "s"}
+          </span>
+        )}
+      </div>
+    </li>
+  );
+}
+
 function IssueRow({ issue, onOpen }) {
   const s = statusMeta(issue.status);
   const p = priorityMeta(issue.priority);
@@ -252,8 +312,15 @@ export default function Board() {
               !issues.error &&
               issues.data &&
               issues.data.length > 0 && (
-                <div className="overflow-x-auto rounded-xl border border-line bg-surface">
-                  <table className="w-full min-w-[560px] border-collapse">
+                <>
+                <ul className="divide-y divide-line rounded-xl border border-line bg-surface sm:hidden">
+                  {issues.data.map((issue) => (
+                    <IssueCard key={issue.id} issue={issue} onOpen={openIssue} />
+                  ))}
+                </ul>
+
+                <div className="hidden overflow-x-auto rounded-xl border border-line bg-surface sm:block">
+                  <table className="w-full border-collapse">
                     <thead className="border-b border-line">
                       <tr>
                         <th
@@ -300,6 +367,7 @@ export default function Board() {
                     </tbody>
                   </table>
                 </div>
+                </>
               )}
             <IssueDrawer
               issueId={issueId}
