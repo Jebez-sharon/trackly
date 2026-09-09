@@ -18,7 +18,7 @@ export default function Dialog({
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       <div
-        className="absolute inset-0 bg-ink/20"
+        className="absolute inset-0 bg-ink/20 animate-fade-in"
         onClick={dismiss}
         aria-hidden="true"
       />
@@ -28,19 +28,19 @@ export default function Dialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative z-10 flex max-h-[90vh] w-full flex-col rounded-t-2xl
+        className="relative z-10 flex max-h-[90vh] w-full animate-pop-in flex-col rounded-t-2xl
                    border border-line bg-surface shadow-xl sm:max-w-lg sm:rounded-2xl"
       >
         <div className="flex items-start justify-between gap-3 border-b border-line px-5 py-4">
           <div className="min-w-0">
             <h2
               id={titleId}
-              className="text-[15px] font-semibold tracking-tight text-ink"
+              className="text-ui font-semibold tracking-tight text-ink"
             >
               {title}
             </h2>
             {description && (
-              <p className="mt-0.5 text-[13px] text-ink-soft">{description}</p>
+              <p className="mt-0.5 text-body text-ink-soft">{description}</p>
             )}
           </div>
 
@@ -50,7 +50,7 @@ export default function Dialog({
             aria-label="Close dialog"
             className="-mr-2 -mt-1 flex h-9 w-9 shrink-0 items-center justify-center
                        rounded-lg text-ink-muted transition-colors
-                       hover:bg-canvas hover:text-ink"
+                       hover:bg-surface-hover hover:text-ink"
           >
             <svg viewBox="0 0 20 20" className="h-4 w-4" aria-hidden="true">
               <path

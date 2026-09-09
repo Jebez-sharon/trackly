@@ -14,10 +14,10 @@ function IssueRow({ issue, onOpen }) {
   return (
     <tr
       onClick={() => onOpen(issue.id)}
-      className="cursor-pointer border-b border-line last:border-b-0 hover:bg-canvas"
+      className="cursor-pointer border-b border-line last:border-b-0 hover:bg-surface-hover"
     >
       <td className="px-4 py-3 align-top">
-        <span className="font-mono text-[12px] font-medium text-ink-muted">
+        <span className="font-mono text-meta font-medium text-ink-muted">
           {issue.issue_key}
         </span>
       </td>
@@ -26,12 +26,12 @@ function IssueRow({ issue, onOpen }) {
         <button
           type="button"
           onClick={() => onOpen(issue.id)}
-          className="block rounded text-left text-[13px] font-medium text-ink hover:text-brand"
+          className="block rounded text-left text-body font-medium text-ink hover:text-brand"
         >
           {issue.title}
         </button>
         {issue.comment_count > 0 && (
-          <span className="mt-0.5 block text-xs text-ink-muted">
+          <span className="mt-0.5 block text-meta text-ink-muted">
             {issue.comment_count} comment{issue.comment_count === 1 ? "" : "s"}
           </span>
         )}
@@ -39,7 +39,7 @@ function IssueRow({ issue, onOpen }) {
 
       <td className="hidden px-4 py-3 align-top sm:table-cell">
         <span
-          className={`inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-medium ${p.text}`}
+          className={`inline-flex items-center gap-1.5 whitespace-nowrap text-meta font-medium ${p.text}`}
         >
           <span
             className={`h-1.5 w-1.5 shrink-0 rounded-full ${p.dot}`}
@@ -50,7 +50,7 @@ function IssueRow({ issue, onOpen }) {
       </td>
       <td className="px-4 py-3 align-top">
         <span
-          className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-0.5 text-xs font-medium ${s.soft} ${s.text}`}
+          className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-0.5 text-meta font-medium ${s.soft} ${s.text}`}
         >
           <span
             className={`h-1.5 w-1.5 shrink-0 rounded-full ${s.dot}`}
@@ -60,7 +60,7 @@ function IssueRow({ issue, onOpen }) {
         </span>
       </td>
 
-      <td className="hidden px-4 py-3 align-top text-[13px] text-ink-soft md:table-cell">
+      <td className="hidden px-4 py-3 align-top text-body text-ink-soft md:table-cell">
         {issue.assignee ? (
           issue.assignee.username
         ) : (
@@ -75,7 +75,7 @@ function Message({ children, tone = "muted", action }) {
   const color = tone === "error" ? "text-danger-text" : "text-ink-soft";
   return (
     <div className="rounded-xl border border-dashed border-line bg-surface px-6 py-12 text-center">
-      <p className={`text-[13px] ${color}`}>{children}</p>
+      <p className={`text-body ${color}`}>{children}</p>
       {action && <div className="mt-4">{action}</div>}
     </div>
   );
@@ -138,7 +138,7 @@ export default function Board() {
                 <button
                   type="button"
                   onClick={openNewProject}
-                  className="rounded-lg bg-brand px-3 py-2 text-[13px] font-medium text-white
+                  className="rounded-lg bg-brand px-3 py-2 text-body font-medium text-white
                                        transition-colors hover:bg-brand-hover"
                 >
                   New Project
@@ -155,20 +155,20 @@ export default function Board() {
         {current && (
           <>
             <div className="mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h2 className="text-[20px] font-semibold tracking-tight text-ink">
+              <h2 className="text-display font-semibold tracking-tight text-ink">
                 {current.name}
               </h2>
-              <span className="rounded-md bg-canvas px-1.5 py-0.5 font-mono text-[11px] font-medium text-ink-muted">
+              <span className="rounded-md bg-canvas px-1.5 py-0.5 font-mono text-micro font-medium text-ink-muted">
                 {current.key}
               </span>
-              <span className="text-[13px] text-ink-soft">
+              <span className="text-body text-ink-soft">
                 {current.issue_count} issue
                 {current.issue_count === 1 ? "" : "s"}
               </span>
               <button
                 type="button"
                 onClick={() => setCreatingIssue(true)}
-                className="ml-auto self-center rounded-lg bg-brand px-3 py-1.5 text-[13px]
+                className="ml-auto self-center rounded-lg bg-brand px-3 py-1.5 text-body
                                        font-medium text-white transition-colors hover:bg-brand-hover"
               >
                 New issue
@@ -176,7 +176,7 @@ export default function Board() {
             </div>
 
             {current.description && (
-              <p className="mb-4 max-w-2xl text-[13px] leading-relaxed text-ink-soft">
+              <p className="mb-4 max-w-2xl text-body leading-relaxed text-ink-soft">
                 {current.description}
               </p>
             )}
@@ -195,7 +195,7 @@ export default function Board() {
                 action={
                     <button type="button"
                       onClick={() => setCreatingIssue(true)}
-                      className="rounded-lg bg-brand px-3 py-2 text-[13px] font-medium text-white
+                      className="rounded-lg bg-brand px-3 py-2 text-body font-medium text-white
                                  transition-colors hover:bg-brand-hover">
                         New Issue
                     </button>
@@ -215,31 +215,31 @@ export default function Board() {
                       <tr>
                         <th
                           scope="col"
-                          className="w-24 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-ink-muted"
+                          className="w-24 px-4 py-2.5 text-left text-micro font-semibold uppercase tracking-wider text-ink-muted"
                         >
                           Key
                         </th>
                         <th
                           scope="col"
-                          className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-ink-muted"
+                          className="px-4 py-2.5 text-left text-micro font-semibold uppercase tracking-wider text-ink-muted"
                         >
                           Title
                         </th>
                         <th
                           scope="col"
-                          className="hidden w-32 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-ink-muted sm:table-cell"
+                          className="hidden w-32 px-4 py-2.5 text-left text-micro font-semibold uppercase tracking-wider text-ink-muted sm:table-cell"
                         >
                           Priority
                         </th>
                         <th
                           scope="col"
-                          className="w-36 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-ink-muted"
+                          className="w-36 px-4 py-2.5 text-left text-micro font-semibold uppercase tracking-wider text-ink-muted"
                         >
                           Status
                         </th>
                         <th
                           scope="col"
-                          className="hidden w-40 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-ink-muted md:table-cell"
+                          className="hidden w-40 px-4 py-2.5 text-left text-micro font-semibold uppercase tracking-wider text-ink-muted md:table-cell"
                         >
                           Assignee
                         </th>

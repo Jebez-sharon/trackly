@@ -6,7 +6,7 @@ export default function Header({title, onOpenMenu, actions}){
                 onClick={onOpenMenu}
                 aria-label="Open navigation"
                 className="-ml-1 rounded-lg p-2 text-ink-soft transition-colors
-                   hover:bg-canvas hover:text-ink lg:hidden"
+                   hover:bg-surface-hover hover:text-ink lg:hidden"
             >
                 <svg className="h-5 w-5" viewBox="0 0 20 20" aria-hidden="true">
                     <path d="M3 6h14M3 10h14M3 14h14" fill="none" stroke="currentColor"
@@ -14,7 +14,7 @@ export default function Header({title, onOpenMenu, actions}){
                 </svg>
             </button>
 
-            <h1 className="text-[15px] font-semibold tracking-tight text-ink">{title}</h1>
+            <h1 className="text-ui font-semibold tracking-tight text-ink">{title}</h1>
             <div className="ml-auto flex items-center gap-2">{actions}</div>
         </header>
     )

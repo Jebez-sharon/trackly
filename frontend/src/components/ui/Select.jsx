@@ -11,7 +11,7 @@ export default function Select({
       {label && (
         <label
           htmlFor={id}
-          className="mb-1.5 block text-[13px] font-medium text-ink"
+          className="mb-1.5 block text-body font-medium text-ink"
         >
           {label}
         </label>
@@ -24,7 +24,7 @@ export default function Select({
           onChange={onChange}
           disabled={disabled}
           className="w-full appearance-none rounded-lg border border-line bg-surface py-2 pl-3 pr-8
-                     text-sm text-ink transition hover:border-line-strong
+                     text-ui text-ink transition hover:border-line-strong
                      focus:border-brand focus:ring-4 focus:ring-brand/10
                      disabled:cursor-not-allowed disabled:opacity-60"
         >

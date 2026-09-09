@@ -24,13 +24,13 @@ export default function Sidebar({ onNavigate }) {
         <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand text-white">
           <Logo className="h-4 w-4" />
         </span>
-        <span className="text-[15px] font-semibold tracking-tight text-ink">
+        <span className="text-ui font-semibold tracking-tight text-ink">
           Trackly
         </span>
       </div>
 
       <div className="px-3 pt-4">
-        <p className="px-1 text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
+        <p className="px-1 text-micro font-semibold uppercase tracking-wider text-ink-muted">
           Organization
         </p>
 
@@ -41,7 +41,7 @@ export default function Sidebar({ onNavigate }) {
               value={activeOrgId ?? ""}
               onChange={(e) => switchOrg(Number(e.target.value))}
               className="w-full appearance-none rounded-lg border border-line bg-surface
-                         py-2 pl-2.5 pr-8 text-sm font-medium text-ink
+                         py-2 pl-2.5 pr-8 text-ui font-medium text-ink
                          hover:border-line-strong focus:border-brand focus:ring-4 focus:ring-brand/10"
             >
               {organizations.map((o) => (
@@ -66,13 +66,13 @@ export default function Sidebar({ onNavigate }) {
             </svg>
           </div>
         ) : (
-          <p className="mt-1.5 px-1 text-sm font-medium text-ink">
+          <p className="mt-1.5 px-1 text-ui font-medium text-ink">
             {activeOrg?.name}
           </p>
         )}
 
         {activeOrg && (
-          <p className="mt-1.5 px-1 text-xs capitalize text-ink-muted">
+          <p className="mt-1.5 px-1 text-meta capitalize text-ink-muted">
             {activeOrg.role}
           </p>
         )}
@@ -84,10 +84,10 @@ export default function Sidebar({ onNavigate }) {
               <li key={item.to}>
                 <NavLink
                   className={({ isActive }) =>
-                    `block rounded-lg px-2.5 py-2 text-sm font-medium transition-colors ${
+                    `block rounded-lg px-2.5 py-2 text-ui font-medium transition-colors ${
                       isActive
                         ? "bg-brand-soft text-brand"
-                        : "text-ink-soft hover:bg-canvas hover:text-ink"
+                        : "text-ink-soft hover:bg-surface-hover hover:text-ink"
                     }`
                   }
                   to={item.to}
@@ -101,7 +101,7 @@ export default function Sidebar({ onNavigate }) {
         </nav>
 
         <div className="flex items-center justify-between gap-2 px-1">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
+          <p className="text-micro font-semibold uppercase tracking-wider text-ink-muted">
             Projects
           </p>
 
@@ -111,7 +111,7 @@ export default function Sidebar({ onNavigate }) {
               onClick={openNewProject}
               aria-label="New project"
               className="-mr-1 flex h-6 w-6 items-center justify-center rounded-md
-                                       text-ink-muted transition-colors hover:bg-canvas hover:text-ink"
+                                       text-ink-muted transition-colors hover:bg-surface-hover hover:text-ink"
             >
               <svg viewBox="0 0 20 20" className="h-4 w-4" aria-hidden="true">
                 <path
@@ -126,11 +126,11 @@ export default function Sidebar({ onNavigate }) {
           )}
 
           {projectsLoading && (
-            <p className="mt-2 px-1 text-xs text-ink-muted">Loading</p>
+            <p className="mt-2 px-1 text-meta text-ink-muted">Loading</p>
           )}
 
           {!projectsLoading && projectsError && (
-            <p className="mt-2 px-1 text-xs text-ink-muted">
+            <p className="mt-2 px-1 text-meta text-ink-muted">
               Could not load projects.
             </p>
           )}
@@ -145,14 +145,14 @@ export default function Sidebar({ onNavigate }) {
                       to={`/board/${p.id}`}
                       onClick={onNavigate}
                       className={({ isActive }) =>
-                        `flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] transition-colors ${
+                        `flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-body transition-colors ${
                           isActive
                             ? "bg-canvas font-medium text-ink"
-                            : "text-ink-soft hover:bg-canvas hover:text-ink"
+                            : "text-ink-soft hover:bg-surface-hover hover:text-ink"
                         }`
                       }
                     >
-                      <span className="shrink-0 rounded bg-canvas px-1 font-mono text-[10px] font-medium text-ink-muted">
+                      <span className="shrink-0 rounded bg-canvas px-1 font-mono text-micro font-medium text-ink-muted">
                         {p.key}
                       </span>
                       <span className="truncate">{p.name}</span>
@@ -161,7 +161,7 @@ export default function Sidebar({ onNavigate }) {
                 ))}
               </ul>
             ) : (
-              <p className="mt-2 px-1 text-xs text-ink-muted">
+              <p className="mt-2 px-1 text-meta text-ink-muted">
                 No projects yet.
               </p>
             ))}
@@ -172,16 +172,16 @@ export default function Sidebar({ onNavigate }) {
         <div className="flex items-center gap-2.5 px-1">
           <span
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full
-                           bg-brand-soft text-[11px] font-semibold text-brand"
+                           bg-brand-soft text-micro font-semibold text-brand"
           >
             {user?.username?.slice(0, 2).toUpperCase()}
           </span>
 
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-[13px] font-medium text-ink">
+            <span className="block truncate text-body font-medium text-ink">
               {user?.username}
             </span>
-            <span className="block truncate text-xs text-ink-muted">
+            <span className="block truncate text-meta text-ink-muted">
               {user?.email}
             </span>
           </span>
@@ -189,8 +189,8 @@ export default function Sidebar({ onNavigate }) {
         <button
           type="button"
           onClick={logout}
-          className="mt-2 w-full rounded-lg px-2.5 py-1.5 text-left text-[13px] font-medium
-                     text-ink-soft transition-colors hover:bg-canvas hover:text-ink"
+          className="mt-2 w-full rounded-lg px-2.5 py-1.5 text-left text-body font-medium
+                     text-ink-soft transition-colors hover:bg-surface-hover hover:text-ink"
         >
           Sign out
         </button>

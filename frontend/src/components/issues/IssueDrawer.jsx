@@ -44,7 +44,7 @@ function Avatar({ name }) {
   return (
     <span
       className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full
-                         bg-brand-soft text-[10px] font-semibold text-brand"
+                         bg-brand-soft text-micro font-semibold text-brand"
     >
       {(name || "?").slice(0, 2).toUpperCase()}
     </span>
@@ -54,10 +54,10 @@ function Avatar({ name }) {
 function Meta({ label, children }) {
   return (
     <div className="min-w-0">
-      <dt className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
+      <dt className="text-micro font-semibold uppercase tracking-wider text-ink-muted">
         {label}
       </dt>
-      <dd className="mt-1 text-[13px] text-ink">{children}</dd>
+      <dd className="mt-1 text-body text-ink">{children}</dd>
     </div>
   );
 }
@@ -65,7 +65,7 @@ function Meta({ label, children }) {
 function Section({ title, children }) {
   return (
     <section className="border-t border-line px-5 py-4">
-      <h3 className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
+      <h3 className="text-micro font-semibold uppercase tracking-wider text-ink-muted">
         {title}
       </h3>
       <div className="mt-2">{children}</div>
@@ -82,7 +82,7 @@ function Select({ label, value, onChange, disabled, children }) {
         onChange={onChange}
         disabled={disabled}
         className="w-full appearance-none rounded-lg border border-line bg-surface py-1.5 pl-2.5 pr-8
-                           text-[13px] font-medium text-ink hover:border-line-strong
+                           text-body font-medium text-ink hover:border-line-strong
                            focus:border-brand focus:ring-4 focus:ring-brand/10
                            disabled:cursor-not-allowed disabled:opacity-60"
       >
@@ -163,11 +163,11 @@ function CommentForm({ issueId, onAdded, onDraftChange }) {
         placeholder="Add a comment"
         id="new-comment"
         className="w-full resize-y rounded-lg border border-line bg-surface px-3 py-2
-                           text-[13px] text-ink placeholder:text-ink-muted
+                           text-body text-ink placeholder:text-ink-muted
                            hover:border-line-strong focus:border-brand focus:ring-4 focus:ring-brand/10"
       />
       {err && (
-        <p role="alert" className="mt-1.5 text-xs text-danger-text">
+        <p role="alert" className="mt-1.5 text-meta text-danger-text">
           {err}
         </p>
       )}
@@ -176,7 +176,7 @@ function CommentForm({ issueId, onAdded, onDraftChange }) {
         <button
           type="submit"
           disabled={!message.trim() || saving}
-          className="rounded-lg bg-brand px-3 py-1.5 text-[13px] font-medium text-white
+          className="rounded-lg bg-brand px-3 py-1.5 text-body font-medium text-white
                                transition-colors hover:bg-brand-hover
                                disabled:cursor-not-allowed disabled:opacity-50"
         >
@@ -242,7 +242,7 @@ export default function IssueDrawer({ issueId, onClose, onIssueChanged }) {
   return (
     <div className="fixed inset-0 z-50">
       <div
-        className="absolute inset-0 bg-ink/20"
+        className="absolute inset-0 bg-ink/20 animate-fade-in"
         onClick={() => {
           if (draftRef.current) {
             document.getElementById("new-comment")?.focus();
@@ -253,7 +253,7 @@ export default function IssueDrawer({ issueId, onClose, onIssueChanged }) {
         aria-hidden="true"
       />
       <div
-        className="absolute inset-y-0 right-0 flex w-full flex-col border-l border-line
+        className="absolute inset-y-0 right-0 flex w-full animate-slide-in-right flex-col border-l border-line
                            bg-surface shadow-xl sm:max-w-xl"
         ref={panelRef}
         tabIndex={-1}
@@ -262,13 +262,13 @@ export default function IssueDrawer({ issueId, onClose, onIssueChanged }) {
         aria-labelledby="drawer-title"
       >
         <div className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-line px-5">
-          <span className="font-mono text-[12px] font-medium text-ink-muted">
+          <span className="font-mono text-meta font-medium text-ink-muted">
             {issue?.issue_key || "Issue"}
           </span>
           <button
             type="button"
             className="-mr-2 flex h-9 w-9 items-center justify-center rounded-lg
-                                   text-ink-muted transition-colors hover:bg-canvas hover:text-ink"
+                                   text-ink-muted transition-colors hover:bg-surface-hover hover:text-ink"
             onClick={onClose}
             aria-label="Close issue"
           >
@@ -286,20 +286,20 @@ export default function IssueDrawer({ issueId, onClose, onIssueChanged }) {
 
         <div tabIndex={0} className="min-h-0 flex-1 overflow-y-auto">
           {loading && (
-            <p className="px-5 py-8 text-[13px] text-ink-soft">
+            <p className="px-5 py-8 text-body text-ink-soft">
               Loading issue...
             </p>
           )}
 
           {!loading && error && (
             <div className="px-5 py-8">
-              <p className="text-[13px] text-danger-text">{error}</p>
+              <p className="text-body text-danger-text">{error}</p>
               <button
                 type="button"
                 onClick={refetch}
                 className="mt-3 rounded-lg border border-line px-3 py-1.5
-                                                       text-[13px] font-medium text-ink transition-colors
-                                                       hover:bg-canvas"
+                                                       text-body font-medium text-ink transition-colors
+                                                       hover:bg-surface-hover"
               >
                 Try again
               </button>
@@ -309,7 +309,7 @@ export default function IssueDrawer({ issueId, onClose, onIssueChanged }) {
             <>
               <div className="px-5 py-4">
                 <h2
-                  className="text-[17px] font-semibold leading-snug tracking-tight text-ink"
+                  className="text-title font-semibold leading-snug tracking-tight text-ink"
                   id="drawer-title"
                 >
                   {issue.title}
@@ -330,7 +330,7 @@ export default function IssueDrawer({ issueId, onClose, onIssueChanged }) {
                     </Select>
                   ):(
                     <span
-                      className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium ${s.soft} ${s.text}`}
+                      className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-meta font-medium ${s.soft} ${s.text}`}
                     >
                       <span
                         className={`h-1.5 w-1.5 shrink-0 rounded-full ${s.dot}`}
@@ -342,7 +342,7 @@ export default function IssueDrawer({ issueId, onClose, onIssueChanged }) {
                   </Meta>
                   <Meta label="Priority">
                     <span
-                      className={`inline-flex items-center gap-1.5 text-xs font-medium ${p.text}`}
+                      className={`inline-flex items-center gap-1.5 text-meta font-medium ${p.text}`}
                     >
                       <span
                         className={`h-1.5 w-1.5 shrink-0 rounded-full ${p.dot}`}
@@ -403,23 +403,23 @@ export default function IssueDrawer({ issueId, onClose, onIssueChanged }) {
                   </Meta>
                 </dl>
                 {mutError && (
-                    <p className="mt-3 text-xs text-danger-text" role="alert">{mutError}</p>
+                    <p className="mt-3 text-meta text-danger-text" role="alert">{mutError}</p>
                 )}
               </div>
 
               <Section title="Description">
                 {issue.description ? (
-                  <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-ink-soft">
+                  <p className="whitespace-pre-wrap text-body leading-relaxed text-ink-soft">
                     {issue.description}
                   </p>
                 ) : (
-                  <p className="text-[13px] text-ink-muted">No description</p>
+                  <p className="text-body text-ink-muted">No description</p>
                 )}
               </Section>
 
               {issue.steps_to_reproduce && (
                 <Section title="Steps to reproduce">
-                  <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-ink-soft">
+                  <p className="whitespace-pre-wrap text-body leading-relaxed text-ink-soft">
                     {issue.steps_to_reproduce}
                   </p>
                 </Section>
@@ -432,15 +432,15 @@ export default function IssueDrawer({ issueId, onClose, onIssueChanged }) {
                       <li key={c.id} className="flex gap-2.5">
                         <Avatar name={c.author?.username} />
                         <div className="min-w-0 flex-1">
-                          <p className="text-[13px]">
+                          <p className="text-body">
                             <span className="font-medium text-ink">
                               {c.author?.username}
                             </span>
-                            <span className="ml-2 text-xs text-ink-muted">
+                            <span className="ml-2 text-meta text-ink-muted">
                               {formatDate(c.created_at)}
                             </span>
                           </p>
-                          <p className="mt-0.5 whitespace-pre-wrap text-[13px] leading-relaxed text-ink-soft">
+                          <p className="mt-0.5 whitespace-pre-wrap text-body leading-relaxed text-ink-soft">
                             {c.message}
                           </p>
                         </div>
@@ -448,7 +448,7 @@ export default function IssueDrawer({ issueId, onClose, onIssueChanged }) {
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-[13px] text-ink-muted">No comments yet.</p>
+                  <p className="text-body text-ink-muted">No comments yet.</p>
                 )}
                 <CommentForm
                   issueId={issue.id}
@@ -472,19 +472,19 @@ export default function IssueDrawer({ issueId, onClose, onIssueChanged }) {
                 {issue.activities?.length ? (
                   <ol className="space-y-2.5">
                     {issue.activities.map((a) => (
-                      <li key={a.id} className="text-[13px] text-ink-soft">
+                      <li key={a.id} className="text-body text-ink-soft">
                         <span className="font-medium text-ink">
                           {a.user?.username}
                         </span>{" "}
                         {activityText(a,nameOf)}
-                        <span className="ml-2 text-xs text-ink-muted">
+                        <span className="ml-2 text-meta text-ink-muted">
                           {formatDate(a.created_at)}
                         </span>
                       </li>
                     ))}
                   </ol>
                 ) : (
-                  <p className="text-[13px] text-ink-muted">
+                  <p className="text-body text-ink-muted">
                     No activity recorded
                   </p>
                 )}

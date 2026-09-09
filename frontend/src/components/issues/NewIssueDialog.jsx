@@ -30,7 +30,7 @@ function Area({
     <div>
       <label
         htmlFor={id}
-        className="mb-1.5 block text-[13px] font-medium text-ink"
+        className="mb-1.5 block text-body font-medium text-ink"
       >
         {label}
         {optional && (
@@ -45,7 +45,7 @@ function Area({
         placeholder={placeholder}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${id}-error` : undefined}
-        className={`w-full resize-y rounded-lg border bg-surface px-3 py-2 text-sm text-ink
+        className={`w-full resize-y rounded-lg border bg-surface px-3 py-2 text-ui text-ink
                     placeholder:text-ink-muted transition focus:ring-4
                     ${
                       error
@@ -54,7 +54,7 @@ function Area({
                     }`}
       />
       {error && (
-        <p id={`${id}-error`} className="mt-1.5 text-xs text-danger-text">
+        <p id={`${id}-error`} className="mt-1.5 text-meta text-danger-text">
           {error}
         </p>
       )}
@@ -170,7 +170,7 @@ export default function NewIssueDialog({
             role="alert"
             className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5"
           >
-            <p className="text-[13px] text-danger-text">{error}</p>
+            <p className="text-body text-danger-text">{error}</p>
           </div>
         )}
 
@@ -263,15 +263,15 @@ export default function NewIssueDialog({
             type="button"
             onClick={closeAndDiscard}
             disabled={saving}
-            className="rounded-lg border border-line px-3 py-2 text-[13px] font-medium
-                       text-ink transition-colors hover:bg-canvas disabled:opacity-60"
+            className="rounded-lg border border-line px-3 py-2 text-body font-medium
+                       text-ink transition-colors hover:bg-surface-hover disabled:opacity-60"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={saving}
-            className="rounded-lg bg-brand px-3 py-2 text-[13px] font-medium text-white
+            className="rounded-lg bg-brand px-3 py-2 text-body font-medium text-white
                        transition-colors hover:bg-brand-hover
                        disabled:cursor-not-allowed disabled:opacity-60"
           >

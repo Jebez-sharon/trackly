@@ -100,7 +100,7 @@ export default function NewProjectDialog({ open, orgId, onClose, onCreated }) {
             role="alert"
             className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5"
           >
-            <p className="text-[13px] text-danger-text">{error}</p>
+            <p className="text-body text-danger-text">{error}</p>
           </div>
         )}
 
@@ -134,7 +134,7 @@ export default function NewProjectDialog({ open, orgId, onClose, onCreated }) {
         <div>
           <label
             htmlFor="project-description"
-            className="mb-1.5 block text-[13px] font-medium text-ink"
+            className="mb-1.5 block text-body font-medium text-ink"
           >
             Description{" "}
             <span className="font-normal text-ink-muted">(optional)</span>
@@ -146,7 +146,7 @@ export default function NewProjectDialog({ open, orgId, onClose, onCreated }) {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="What lives in this project?"
             className="w-full resize-y rounded-lg border border-line bg-surface px-3 py-2
-                       text-sm text-ink placeholder:text-ink-muted transition
+                       text-ui text-ink placeholder:text-ink-muted transition
                        hover:border-line-strong focus:border-brand focus:ring-4 focus:ring-brand/10"
           />
         </div>
@@ -156,14 +156,14 @@ export default function NewProjectDialog({ open, orgId, onClose, onCreated }) {
             type="button"
             onClick={closeAndDiscard}
             disabled={saving}
-            className="rounded-lg border border-line px-3 py-2 text-[13px] font-medium
-                       text-ink transition-colors hover:bg-canvas disabled:opacity-60"
+            className="rounded-lg border border-line px-3 py-2 text-body font-medium
+                       text-ink transition-colors hover:bg-surface-hover disabled:opacity-60"
           >
             Cancel
           </button>
           <button type="submit"
             disabled={saving}
-            className="rounded-lg bg-brand px-3 py-2 text-[13px] font-medium text-white
+            className="rounded-lg bg-brand px-3 py-2 text-body font-medium text-white
                        transition-colors hover:bg-brand-hover
                        disabled:cursor-not-allowed disabled:opacity-60">
             {saving ? "Creating..." : "Create project"}
