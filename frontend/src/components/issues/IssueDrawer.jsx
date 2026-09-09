@@ -11,6 +11,7 @@ import {
 import { useMemo, useRef, useState } from "react";
 import api from "../../lib/api";
 import { useAuth } from "../../context/auth-context";
+import ConfirmDialog from "../ui/ConfirmDialog";
 
 function formatDate(iso) {
   if (!iso) return "";
@@ -187,9 +188,19 @@ function CommentForm({ issueId, onAdded, onDraftChange }) {
   );
 }
 
-export default function IssueDrawer({ issueId, onClose, onIssueChanged }) {
+export default function IssueDrawer({
+  issueId,
+  onClose,
+  onIssueChanged,
+  onIssueDeleted,
+}) {
   const open = Boolean(issueId);
-  const panelRef = useFocusTrap(open, onClose);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  // The drawer and the confirm dialog both listen for Escape on document, so
+  // a single keypress would close both. While the confirm is open it owns Escape.
+  const panelRef = useFocusTrap(open, () => {
+    if (!confirmOpen) onClose();
+  });
   const {
     data: issue,
     setData: setIssue,
@@ -223,6 +234,16 @@ export default function IssueDrawer({ issueId, onClose, onIssueChanged }) {
   const nameOf = (id) => nameById.get(String(id)) || "someone";
 
   const canEdit= Boolean(issue) && (activeOrg?.role==="admin" || issue.assignee?.id === user?.id);
+
+  // Deliberately stricter than canEdit, matching delete_issue on the server:
+  // an assignee moves an issue along, an admin destroys it.
+  const canDelete = Boolean(issue) && activeOrg?.role === "admin";
+
+  async function deleteIssue() {
+    await api.delete(`/api/issues/${issue.id}`);
+    setConfirmOpen(false);
+    onIssueDeleted?.(issue.id);
+  }
 
   async function  mutate(body) {
     setBusy(true)
@@ -265,6 +286,27 @@ export default function IssueDrawer({ issueId, onClose, onIssueChanged }) {
           <span className="font-mono text-meta font-medium text-ink-muted">
             {issue?.issue_key || "Issue"}
           </span>
+          <div className="flex items-center gap-1">
+          {canDelete && (
+            <button
+              type="button"
+              onClick={() => setConfirmOpen(true)}
+              aria-label="Delete issue"
+              className="flex h-9 w-9 items-center justify-center rounded-lg
+                         text-ink-muted transition-colors hover:bg-danger-soft hover:text-danger-text"
+            >
+              <svg viewBox="0 0 20 20" className="h-4 w-4" aria-hidden="true">
+                <path
+                  d="M4 6h12M8 6V4.5h4V6M6.5 6l.5 9h6l.5-9M8.5 8.5v4M11.5 8.5v4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          )}
           <button
             type="button"
             className="-mr-2 flex h-9 w-9 items-center justify-center rounded-lg
@@ -282,6 +324,7 @@ export default function IssueDrawer({ issueId, onClose, onIssueChanged }) {
               />
             </svg>
           </button>
+          </div>
         </div>
 
         <div tabIndex={0} className="min-h-0 flex-1 overflow-y-auto">
@@ -493,6 +536,21 @@ export default function IssueDrawer({ issueId, onClose, onIssueChanged }) {
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Delete this issue?"
+        description={
+          issue
+            ? `${issue.issue_key} and its ${issue.comments?.length ?? 0} comment${
+                (issue.comments?.length ?? 0) === 1 ? "" : "s"
+              } and full activity history will be removed. This cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete issue"
+        onConfirm={deleteIssue}
+        onClose={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }

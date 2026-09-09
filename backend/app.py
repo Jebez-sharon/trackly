@@ -51,8 +51,9 @@ def create_app():
     from routes.auth_routes import auth_bp
     app.register_blueprint(auth_bp)
 
-    from routes.project_routes import project_bp
+    from routes.project_routes import project_bp, project_detail_bp
     app.register_blueprint(project_bp)
+    app.register_blueprint(project_detail_bp)
 
     from routes.issue_routes import issue_bp, issue_detail_bp
     app.register_blueprint(issue_bp)

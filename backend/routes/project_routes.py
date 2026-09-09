@@ -7,6 +7,10 @@ from routes.utils import current_user_id, get_membership, require_admin
 
 project_bp = Blueprint('projects',__name__,url_prefix='/api/organizations')
 
+# A single project is addressed by its own id, not through its organization,
+# so it needs a second prefix. Same split as issue_bp / issue_detail_bp.
+project_detail_bp = Blueprint('project_detail',__name__,url_prefix='/api/projects')
+
 @project_bp.route('/<int:org_id>/projects', methods=['GET'])
 @jwt_required()
 def listProjects(org_id):
@@ -61,6 +65,29 @@ def create_project(org_id):
     db.session.commit()
 
     return jsonify(project.to_dict()),201
+
+
+@project_detail_bp.route('/<int:project_id>', methods=['DELETE'])
+@jwt_required()
+def delete_project(project_id):
+    project = db.session.get(Project, project_id)
+    if project is None:
+        return jsonify({'error':'Project not found'}),404
+
+    # 404 before the membership check means a non-member can tell a real id
+    # from a fake one by the status code. That matches issue_if_allowed, and
+    # it is the known enumeration gap to close across every route at once
+    # rather than diverging here.
+    error = require_admin(project.organization_id)
+    if error:
+        return error
+
+    # Issue carries cascade='all, delete-orphan', and each Issue cascades to
+    # its comments and activity, so this removes the whole subtree.
+    db.session.delete(project)
+    db.session.commit()
+
+    return '',204
 
 
     

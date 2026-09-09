@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required
 from sqlalchemy.orm import selectinload
 
 from models import db, Issue, Project
-from routes.utils import current_user_id, get_membership, is_member, issue_if_allowed, json_body
+from routes.utils import current_user_id, get_membership, is_member, issue_if_allowed, json_body, require_admin
 from services.issue_service import create_issue, change_status, change_assignee
 
 
@@ -157,4 +157,24 @@ def update_issue(issue_id):
         change_assignee(issue, user_id, assignee_id)
 
     return jsonify(issue.to_dict_detailed()),200
+
+
+@issue_detail_bp.route('/<int:issue_id>', methods=['DELETE'])
+@jwt_required()
+def delete_issue(issue_id):
+    issue, error = issue_if_allowed(issue_id)
+    if error:
+        return error
+
+    # Deliberately stricter than _may_edit. An assignee can move an issue
+    # through the workflow; destroying it and its history is an admin action.
+    admin_error = require_admin(issue.project.organization_id)
+    if admin_error:
+        return admin_error
+
+    # activities and comments both carry cascade='all, delete-orphan'.
+    db.session.delete(issue)
+    db.session.commit()
+
+    return '',204
     

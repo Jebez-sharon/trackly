@@ -7,6 +7,8 @@ import { useProjects } from "../context/projects-context";
 import useFetch from "../lib/useFetch";
 import { statusMeta, priorityMeta } from "../lib/constants";
 import NewIssueDialog from "../components/issues/NewIssueDialog";
+import ConfirmDialog from "../components/ui/ConfirmDialog";
+import api from "../lib/api";
 
 function IssueRow({ issue, onOpen }) {
   const s = statusMeta(issue.status);
@@ -97,7 +99,10 @@ export default function Board() {
   } = useProjects();
   const { projectId, issueId } = useParams();
   const [creatingIssue, setCreatingIssue] = useState(false);
+  const [confirmDeleteProject, setConfirmDeleteProject] = useState(false);
   const navigate = useNavigate();
+
+  const isAdmin = activeOrg?.role === "admin";
 
   const openIssue = (id) => navigate(`/board/${projectId}/issues/${id}`);
   // replace, so closing does not leave the issue sitting in history where Back
@@ -120,6 +125,23 @@ export default function Board() {
     setCreatingIssue(false);
     issues.setData((prev) => (prev ? [...prev, issue] : [issue]));
     await refetchProjects({ quiet: true });
+  }
+
+  async function handleIssueDeleted(id) {
+    issues.setData((prev) => (prev ? prev.filter((i) => i.id !== id) : prev));
+    // Close before refetching: the drawer is reading an issue that no longer
+    // exists, and leaving it mounted would show "Issue not found".
+    closeIssue();
+    await refetchProjects({ quiet: true });
+  }
+
+  async function deleteProject() {
+    await api.delete(`/api/projects/${current.id}`);
+    setConfirmDeleteProject(false);
+    await refetchProjects({ quiet: true });
+    // /board redirects to whichever project is now first, or shows the empty
+    // state if that was the last one.
+    navigate("/board", { replace: true });
   }
 
   if (!projectsLoading && !projectId && projects.length > 0) {
@@ -173,14 +195,27 @@ export default function Board() {
                 {current.issue_count} issue
                 {current.issue_count === 1 ? "" : "s"}
               </span>
-              <button
-                type="button"
-                onClick={() => setCreatingIssue(true)}
-                className="ml-auto self-center rounded-lg bg-brand px-3 py-1.5 text-body
-                                       font-medium text-white transition-colors hover:bg-brand-hover"
-              >
-                New issue
-              </button>
+              <div className="ml-auto flex items-center gap-2 self-center">
+                <button
+                  type="button"
+                  onClick={() => setCreatingIssue(true)}
+                  className="rounded-lg bg-brand px-3 py-1.5 text-body
+                             font-medium text-white transition-colors hover:bg-brand-hover"
+                >
+                  New issue
+                </button>
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDeleteProject(true)}
+                    className="rounded-lg border border-line px-3 py-1.5 text-body
+                               font-medium text-ink-soft transition-colors
+                               hover:border-danger-line hover:bg-danger-soft hover:text-danger-text"
+                  >
+                    Delete project
+                  </button>
+                )}
+              </div>
             </div>
 
             {current.description && (
@@ -270,6 +305,15 @@ export default function Board() {
               issueId={issueId}
               onClose={closeIssue}
               onIssueChanged={patchIssue}
+              onIssueDeleted={handleIssueDeleted}
+            />
+            <ConfirmDialog
+              open={confirmDeleteProject}
+              title="Delete this project?"
+              description={`${current.name} and all ${current.issue_count} of its issues, with their comments and history, will be removed. This cannot be undone.`}
+              confirmLabel="Delete project"
+              onConfirm={deleteProject}
+              onClose={() => setConfirmDeleteProject(false)}
             />
             <NewIssueDialog 
             open={creatingIssue}
