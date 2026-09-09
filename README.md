@@ -112,10 +112,22 @@ or assignee.
 ## Checks
 
 ```bash
+cd backend && ./venv/Scripts/python.exe -m pytest
 cd frontend && npx eslint src --max-warnings=0
 cd frontend && npm run build
 ```
 
-There is no automated test suite yet. Behaviour has been verified manually,
-including with axe-core for accessibility. A pytest suite covering auth,
-permissions and the create paths is planned.
+The API suite runs against an in-memory SQLite database, so it needs no
+network and does not touch your real data. It covers registration and login,
+who is allowed to do what, the validation on every write, and that deletes
+cascade.
+
+Two things it deliberately does not prove. SQLite ignores
+`SELECT ... FOR UPDATE`, so the row lock that stops two concurrent requests
+claiming the same issue key is a no-op there — the tests check the key
+sequence, not the locking. And SQLite does not enforce `VARCHAR` length, so
+the length limits are verified by the application rejecting them rather than
+by the column refusing them.
+
+There are no frontend tests. That behaviour has been checked by hand,
+including with axe-core for accessibility.

@@ -81,6 +81,11 @@ def add_issues(project_id):
     if not title or not description:
         return jsonify({'error':'title and description are required'}),400
 
+    if len(title) > TITLE_MAX:
+        return jsonify({
+            'error':f'title must be {TITLE_MAX} characters or fewer'
+        }),400
+
     priority = data.get('priority') or 'no_priority'
     if priority not in VALID_PRIORITIES:
         return jsonify({'error':f'priority must be one of {sorted(VALID_PRIORITIES)}'}),400

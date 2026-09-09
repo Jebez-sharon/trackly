@@ -39,9 +39,11 @@ def register_error_handlers(app):
         app.logger.exception('Unhandled error on %s %s', request.method, request.path)
         return jsonify({'error':'Something went wrong on our side.'}), 500
 
-def create_app():
+def create_app(config_object=Config):
+    """config_object is overridable so the tests can point at an in-memory
+    database instead of the real one."""
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config.from_object(config_object)
 
     CORS(app, origins=['http://localhost:5173'])
     db.init_app(app)
