@@ -53,11 +53,12 @@ function IssueRow({issue, onOpen}){
     );
 }
 
-function Message({ children, tone = "muted"}){
+function Message({ children, tone = "muted",action}){
     const color = tone === "error" ? "text-danger-text" : "text-ink-soft";
     return (
         <div className="rounded-xl border border-dashed border-line bg-surface px-6 py-12 text-center">
             <p className={`text-[13px] ${color}`}>{children}</p>
+            {action && <div className="mt-4">{action}</div>}
         </div>
     )
 }
@@ -65,7 +66,7 @@ function Message({ children, tone = "muted"}){
 export default function Board(){
     const {openMenu} = useOutletContext();
     const {activeOrg} = useAuth();
-    const {projects, loading:projectsLoading, error:projectsError} = useProjects();
+    const {projects, loading:projectsLoading, error:projectsError,canCreateProject, openNewProject} = useProjects();
     const {projectId} = useParams()
         const [openIssueId, setOpenIssueId] = useState(null);
 
@@ -97,8 +98,15 @@ export default function Board(){
                     <Message tone="error">{projectsError}</Message>
                 )}
                 {!projectsLoading && !projectsError && projects.length === 0 &&(
-                    <Message>
-                        No Projects in {activeOrg?.name || "this organization"}
+                    <Message action= {canCreateProject ? (
+                        <button type="button" onClick={openNewProject}
+                            className="rounded-lg bg-brand px-3 py-2 text-[13px] font-medium text-white
+                                       transition-colors hover:bg-brand-hover">New Project</button>
+                    ): null}>
+
+                        {canCreateProject ?
+                        `No Projects in ${activeOrg?.name || "this organization"} yet. create the first one.`:
+                            `No Projects in ${activeOrg?.name || "this organization"} yet. An admin can create one.`}
                     </Message>
                 )}
 
