@@ -153,6 +153,7 @@ class Issue(db.Model):
         'IssueActivity',
         backref='issue',
         lazy=True,
+        order_by = 'IssueActivity.id',
         cascade='all, delete-orphan'
     )
 
@@ -160,6 +161,7 @@ class Issue(db.Model):
         'Comment',
         backref='issue',
         lazy=True,
+        order_by = 'Comment.id',        
         cascade='all, delete-orphan',
     )
 

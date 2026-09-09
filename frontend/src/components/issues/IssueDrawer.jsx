@@ -1,6 +1,9 @@
 import useFocusTrap from "../../hooks/useFocusTrap";
 import useFetch from "../../lib/useFetch";
 import { statusMeta, priorityMeta, SEVERITIES, ISSUE_TYPES } from "../../lib/constants";
+import { useRef, useState } from "react";
+import api from "../../lib/api";
+
 
 function formatDate(iso){
     if(!iso) return "";
@@ -55,10 +58,80 @@ function Section({title, children}){
     );
 }
 
-export default function IssueDrawer({issueId, onClose}){
+function CommentForm({issueId, onAdded, onDraftChange}){
+    const [message, setMessage] = useState("")
+    const [saving, setSaving] = useState(false)
+    const [err, setErr] = useState(null)
+    const boxRef = useRef(null);
+
+    async function submit(e){
+        e.preventDefault();
+        const text = message.trim();
+        if(!text || saving) return;
+
+        setSaving(true)
+        setErr(null)
+        try{
+            const {data} = await api.post(`/api/issues/${issueId}/comments`,
+                {message:text}
+            );
+            setMessage("")
+            onDraftChange?.(false);
+            onAdded(data)
+            boxRef.current?.focus();
+        }catch(e2){
+            setErr(e2.message);
+        }finally{
+            setSaving(false)
+        }
+    }
+
+    return (
+        <form onSubmit={submit} className="mt-4">
+            <label htmlFor="new-comment" className="sr-only">Add a comment</label>
+                <textarea ref={boxRef} rows={3} value={message}
+                onChange={(e) => {
+                    setMessage(e.target.value)
+                    onDraftChange?.(Boolean(e.target.value.trim()));
+                }}
+                onKeyDown={(e) => {
+                    if((e.metaKey || e.ctrlKey) && e.key === 'Enter'){
+                        e.preventDefault();
+                        e.currentTarget.form?.requestSubmit();
+                        return;
+                    }
+                    // Escape backs out of the composer before it reaches the
+                    // drawer, so a stray keypress cannot throw away a draft.
+                    if(e.key === "Escape" && message){
+                        e.stopPropagation();
+                        e.currentTarget.blur();
+                    }
+                }}
+                placeholder="Add a comment" id="new-comment" 
+                className="w-full resize-y rounded-lg border border-line bg-surface px-3 py-2
+                           text-[13px] text-ink placeholder:text-ink-muted
+                           hover:border-line-strong focus:border-brand focus:ring-4 focus:ring-brand/10" />
+                {err && (
+                    <p role="alert" className="mt-1.5 text-xs text-danger-text">{err}</p>
+                )}
+
+                <div className="mt-2 flex justify-end">
+                    <button type="submit" disabled={!message.trim() || saving} 
+                    className="rounded-lg bg-brand px-3 py-1.5 text-[13px] font-medium text-white
+                               transition-colors hover:bg-brand-hover
+                               disabled:cursor-not-allowed disabled:opacity-50">
+                        {saving ? "Posting...":"Comment"}
+                    </button>
+                </div>
+        </form>
+    )
+}
+
+export default function IssueDrawer({issueId, onClose, onIssueChanged}){
     const open = Boolean(issueId);
     const panelRef = useFocusTrap(open, onClose);
-    const {data:issue, loading, error,refetch} = useFetch(open? `/api/issues/${issueId}`:null);
+    const {data:issue,setData:setIssue, loading, error,refetch} = useFetch(open? `/api/issues/${issueId}`:null);
+    const draftRef = useRef(false);
 
     if(!open) return null;
 
@@ -67,7 +140,15 @@ export default function IssueDrawer({issueId, onClose}){
 
     return (
         <div className="fixed inset-0 z-50">
-            <div className="absolute inset-0 bg-ink/20" onClick={onClose} aria-hidden="true"/>
+            <div className="absolute inset-0 bg-ink/20" 
+            onClick={()=>{
+                if(draftRef.current){
+                    document.getElementById("new-comment")?.focus();
+                    return;
+                }
+                onClose();
+            }}
+            aria-hidden="true"/>
                 <div className="absolute inset-y-0 right-0 flex w-full flex-col border-l border-line
                            bg-surface shadow-xl sm:max-w-xl" ref={panelRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="drawer-title">
                             <div className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-line px-5">
@@ -184,6 +265,19 @@ export default function IssueDrawer({issueId, onClose}){
                                             ):(
                                                 <p className="text-[13px] text-ink-muted">No comments yet.</p>
                                             )}
+                                            <CommentForm issueId={issue.id} onDraftChange={(has) =>{
+                                                draftRef.current = has;
+                                            }} onAdded={(c)=>{
+                                                setIssue((prev) => ({
+                                                    ...prev,
+                                                    comments:[...(prev.comments || []),c],
+                                                    comment_count:(prev.comment_count || 0)+1,
+                                                }));
+                                                onIssueChanged?.(issue.id,{
+                                                    comment_count:
+                                                    (issue.comment_count || 0)+1,
+                                                })
+                                            }}/>
                                         </Section>
 
                                         <Section title="Activity">

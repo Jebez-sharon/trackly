@@ -74,6 +74,11 @@ export default function Board(){
 
     const issues = useFetch(current ? `/api/projects/${current.id}/issues`: null);
 
+    const patchIssue = (id, patch) => 
+        issues.setData((prev)=>
+            prev? prev.map((i) => (i.id === id ? {...i, ...patch}:i)):prev
+        )
+
     if(!projectsLoading && !projectId && projects.length > 0){
         return <Navigate to={`/board/${projects[0].id}`} replace />;
     }
@@ -160,7 +165,7 @@ export default function Board(){
                             </table>
                         </div>
                     )}
-                    <IssueDrawer issueId={openIssueId} onClose={()=> setOpenIssueId(null)}/>
+                    <IssueDrawer issueId={openIssueId} onClose={()=> setOpenIssueId(null)} onIssueChanged={patchIssue}/>
                     </>
                 )}
             </div>
