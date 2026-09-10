@@ -39,6 +39,42 @@ def require_admin(org_id):
         return jsonify({'error':'Only admins can do this'}),403
     return None
 
+DEFAULT_PER_PAGE = 50
+MAX_PER_PAGE = 200
+
+
+def pagination_args():
+    """page and per_page from the query string, always usable.
+
+    Junk is treated as absent rather than as an error: a list endpoint that
+    400s because someone hand-edited ?page=abc in the address bar is more
+    annoying than one that shows page 1. per_page is clamped so a caller
+    cannot ask for the whole table and undo the point of paginating.
+    """
+    def as_int(name, default):
+        try:
+            return int(request.args.get(name, default))
+        except (TypeError, ValueError):
+            return default
+
+    page = max(as_int('page', 1), 1)
+    per_page = min(max(as_int('per_page', DEFAULT_PER_PAGE), 1), MAX_PER_PAGE)
+    return page, per_page
+
+
+def paginated(query, to_dict=lambda row: row.to_dict()):
+    """A list response with the numbers a client needs to page through it."""
+    page, per_page = pagination_args()
+    result = db.paginate(query, page=page, per_page=per_page, error_out=False)
+    return {
+        'items': [to_dict(row) for row in result.items],
+        'page': result.page,
+        'per_page': result.per_page,
+        'total': result.total,
+        'pages': result.pages,
+    }
+
+
 def json_body():
     """Always returns a dict.
 

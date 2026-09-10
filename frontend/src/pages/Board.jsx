@@ -1,7 +1,13 @@
 import { useState } from "react";
 import IssueDrawer from "../components/issues/IssueDrawer";
 import Header from "../components/layout/Header";
-import { Navigate, useNavigate, useOutletContext, useParams } from "react-router-dom";
+import {
+  Navigate,
+  useNavigate,
+  useOutletContext,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { useAuth } from "../context/auth-context";
 import { useProjects } from "../context/projects-context";
 import useFetch from "../lib/useFetch";
@@ -136,6 +142,52 @@ function IssueRow({ issue, onOpen }) {
   );
 }
 
+// The server derives pages from total; optimistic updates have to do the same
+// or the pager keeps offering a page that has stopped existing.
+const pagesFor = (total, perPage) =>
+  Math.max(1, Math.ceil(total / (perPage || 1)));
+
+function Pager({ page, pages, total, perPage, onPage }) {
+  if (!pages || pages <= 1) return null;
+  const first = (page - 1) * perPage + 1;
+  const last = Math.min(page * perPage, total);
+  return (
+    <nav
+      aria-label="Issue pages"
+      className="mt-3 flex flex-wrap items-center justify-between gap-3"
+    >
+      <p className="text-meta text-ink-muted" aria-live="polite">
+        {first}&ndash;{last} of {total}
+      </p>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => onPage(page - 1)}
+          disabled={page <= 1}
+          className="rounded-lg border border-line px-3 py-1.5 text-body font-medium
+                     text-ink transition-colors hover:bg-surface-hover
+                     disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span className="text-meta text-ink-muted">
+          Page {page} of {pages}
+        </span>
+        <button
+          type="button"
+          onClick={() => onPage(page + 1)}
+          disabled={page >= pages}
+          className="rounded-lg border border-line px-3 py-1.5 text-body font-medium
+                     text-ink transition-colors hover:bg-surface-hover
+                     disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+    </nav>
+  );
+}
+
 function Message({ children, tone = "muted", action }) {
   const color = tone === "error" ? "text-danger-text" : "text-ink-soft";
   return (
@@ -158,6 +210,7 @@ export default function Board() {
     refetch: refetchProjects,
   } = useProjects();
   const { projectId, issueId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [creatingIssue, setCreatingIssue] = useState(false);
   const [confirmDeleteProject, setConfirmDeleteProject] = useState(false);
   const navigate = useNavigate();
@@ -173,25 +226,83 @@ export default function Board() {
     ? projects.find((p) => String(p.id) === projectId)
     : null;
 
+  // The page lives in the URL, so a paged view is shareable and Back works,
+  // the same reason the open issue does.
+  const page = Math.max(1, Number(searchParams.get("page")) || 1);
   const issues = useFetch(
-    current ? `/api/projects/${current.id}/issues` : null,
+    current ? `/api/projects/${current.id}/issues?page=${page}` : null,
   );
+
+  // The response is { items, page, per_page, total, pages }, so every read and
+  // every optimistic update goes through .items rather than the body itself.
+  const rows = issues.data?.items ?? [];
+
+  const goToPage = (next) => {
+    const params = new URLSearchParams(searchParams);
+    if (next <= 1) params.delete("page");
+    else params.set("page", String(next));
+    setSearchParams(params);
+  };
 
   const patchIssue = (id, patch) =>
     issues.setData((prev) =>
-      prev ? prev.map((i) => (i.id === id ? { ...i, ...patch } : i)) : prev,
+      prev
+        ? {
+            ...prev,
+            items: prev.items.map((i) =>
+              i.id === id ? { ...i, ...patch } : i,
+            ),
+          }
+        : prev,
     );
+
   async function handleIssueCreated(issue) {
     setCreatingIssue(false);
-    issues.setData((prev) => (prev ? [...prev, issue] : [issue]));
+    // Appending is only right on the last page, and only while it has room.
+    // On an earlier page, or a last page already at per_page, the new issue
+    // belongs on a page we are not looking at - so refetch instead of
+    // rendering a 51st row in a 50-row page.
+    const onLastPage = issues.data && page >= (issues.data.pages || 1);
+    const hasRoom =
+      issues.data && issues.data.items.length < issues.data.per_page;
+    if (onLastPage && hasRoom) {
+      issues.setData((prev) => {
+        const total = (prev.total || 0) + 1;
+        return {
+          ...prev,
+          items: [...prev.items, issue],
+          total,
+          pages: pagesFor(total, prev.per_page),
+        };
+      });
+    } else {
+      await issues.refetch({ quiet: true });
+    }
     await refetchProjects({ quiet: true });
   }
 
   async function handleIssueDeleted(id) {
-    issues.setData((prev) => (prev ? prev.filter((i) => i.id !== id) : prev));
+    issues.setData((prev) => {
+      if (!prev) return prev;
+      const total = Math.max((prev.total || 1) - 1, 0);
+      return {
+        ...prev,
+        items: prev.items.filter((i) => i.id !== id),
+        total,
+        // pages is derived from total, so leaving it alone strands a Next
+        // button pointing at a page that no longer exists.
+        pages: pagesFor(total, prev.per_page),
+      };
+    });
     // Close before refetching: the drawer is reading an issue that no longer
     // exists, and leaving it mounted would show "Issue not found".
     closeIssue();
+
+    // Removing the only issue on a later page empties it, which unmounts the
+    // list and the pager with it - leaving "nothing has been reported here"
+    // on a project that has plenty, and no control to get back.
+    if (rows.length === 1 && page > 1) goToPage(page - 1);
+
     await refetchProjects({ quiet: true });
   }
 
@@ -293,7 +404,7 @@ export default function Board() {
             {!issues.loading &&
               !issues.error &&
               issues.data &&
-              issues.data.length === 0 && (
+              rows.length === 0 && (
                 <Message
                 action={
                     <button type="button"
@@ -311,10 +422,10 @@ export default function Board() {
             {!issues.loading &&
               !issues.error &&
               issues.data &&
-              issues.data.length > 0 && (
+              rows.length > 0 && (
                 <>
                 <ul className="divide-y divide-line rounded-xl border border-line bg-surface sm:hidden">
-                  {issues.data.map((issue) => (
+                  {rows.map((issue) => (
                     <IssueCard key={issue.id} issue={issue} onOpen={openIssue} />
                   ))}
                 </ul>
@@ -357,7 +468,7 @@ export default function Board() {
                     </thead>
 
                     <tbody>
-                      {issues.data.map((issue) => (
+                      {rows.map((issue) => (
                         <IssueRow
                           key={issue.id}
                           issue={issue}
@@ -367,6 +478,14 @@ export default function Board() {
                     </tbody>
                   </table>
                 </div>
+
+                <Pager
+                  page={issues.data.page}
+                  pages={issues.data.pages}
+                  total={issues.data.total}
+                  perPage={issues.data.per_page}
+                  onPage={goToPage}
+                />
                 </>
               )}
             <IssueDrawer
@@ -375,7 +494,7 @@ export default function Board() {
               onIssueChanged={patchIssue}
               onIssueDeleted={handleIssueDeleted}
               // Prev/next walks the list in the order it is displayed.
-              siblingIds={(issues.data ?? []).map((i) => i.id)}
+              siblingIds={rows.map((i) => i.id)}
               onNavigate={openIssue}
             />
             <ConfirmDialog

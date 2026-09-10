@@ -3,7 +3,8 @@ from flask_jwt_extended import jwt_required
 from sqlalchemy.orm import selectinload
 
 from models import db, Issue, IssueActivity, Project
-from routes.utils import current_user_id, get_membership, is_member, issue_if_allowed, json_body, require_admin
+from routes.utils import (current_user_id, get_membership, is_member,
+                          issue_if_allowed, json_body, paginated, require_admin)
 from services.issue_service import create_issue, change_status, change_assignee
 
 
@@ -58,13 +59,14 @@ def list_issues(project_id):
     if error:
         return error
 
-    issues = Issue.query.options(
+    query = Issue.query.options(
         selectinload(Issue.reporter),
         selectinload(Issue.assignee),
     ).filter_by(
         project_id=project.id
-    ).order_by(Issue.id).all()
-    return jsonify([i.to_dict() for i in issues]),200
+    ).order_by(Issue.id)
+
+    return jsonify(paginated(query)),200
 
 @issue_bp.route('/<int:project_id>/issues', methods=['POST'])
 @jwt_required()
