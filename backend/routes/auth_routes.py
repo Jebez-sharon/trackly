@@ -3,6 +3,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token
 from routes.utils import json_body
+from extensions import limiter
 from models import db, User, Organization, OrganizationMember
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
@@ -10,7 +11,23 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 def _clean(value):
     return value.strip() if isinstance(value, str) else ''
 
+
+# Every one of these is a String(n) column. Without the check the value reaches
+# Postgres and comes back as an unhandled 500 - on the one route that anyone
+# can reach without credentials.
+MAX_LENGTHS = {
+    'username': 50,   # User.username
+    'email': 120,     # User.email
+    'org_name': 100,  # Organization.name
+    'org_slug': 50,   # Organization.slug
+}
+
+# The hash is fixed width whatever goes in, so this is not about the column.
+# It caps how much data one unauthenticated request can push through scrypt.
+PASSWORD_MAX = 128
+
 @auth_bp.route('/register', methods=['POST'])
+@limiter.limit('5 per hour; 20 per day')
 def register():
     data = json_body()
     username = _clean(data.get('username'))
@@ -36,9 +53,31 @@ def register():
             'fields': missing
         }),400
 
+    too_long = [
+        name
+        for name, value in (
+            ('username', username),
+            ('email', email),
+            ('org_name', org_name),
+            ('org_slug', org_slug),
+        )
+        if len(value) > MAX_LENGTHS[name]
+    ]
+    if too_long:
+        return jsonify({
+            'error':'Some fields are too long',
+            'fields': too_long,
+            'limits': {name: MAX_LENGTHS[name] for name in too_long},
+        }),400
+
     if len(password)< 8:
         return jsonify({'error':'Password must be'
         ' atleast 8 characters.'}),400
+
+    if len(password) > PASSWORD_MAX:
+        return jsonify({
+            'error':f'Password must be {PASSWORD_MAX} characters or fewer.'
+        }),400
 # check if user already exists
     
     if User.query.filter_by(email = email).first():
@@ -69,6 +108,9 @@ def register():
 
 
 @auth_bp.route('/login',methods=['POST'])
+# Each attempt costs ~118ms of scrypt whether or not the email exists, so
+# this protects the CPU as much as the accounts.
+@limiter.limit('10 per minute; 100 per hour')
 def login():
     data = json_body()
     email = _clean(data.get('email')).lower()

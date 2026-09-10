@@ -27,5 +27,12 @@ class Config:
         'pool_recycle': 1800,
     }
 
+    # memory:// keeps counters in this process, which is only correct for a
+    # single worker. Set RATELIMIT_STORAGE_URI to a Redis URL before scaling.
+    RATELIMIT_STORAGE_URI = os.environ.get('RATELIMIT_STORAGE_URI', 'memory://')
+
+    # Sends X-RateLimit-* and, once a limit is hit, Retry-After.
+    RATELIMIT_HEADERS_ENABLED = True
+
     
 

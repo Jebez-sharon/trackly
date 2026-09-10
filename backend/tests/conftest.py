@@ -21,6 +21,13 @@ class TestConfig(Config):
     # pool_pre_ping and pool_recycle exist for a networked Postgres; recycling
     # a SQLite in-memory connection would throw the whole database away.
     SQLALCHEMY_ENGINE_OPTIONS = {}
+    # Real hashing is deliberately slow. Every fixture user costs a register and
+    # a login, so at scrypt's ~118ms a call it was most of the suite's runtime.
+    # This is the only place this key is ever set.
+    PASSWORD_HASH_METHOD = "pbkdf2:sha256:1"
+    # Off by default: the suite registers far more than five users an hour.
+    # test_rate_limits.py turns it back on for the tests that are about limits.
+    RATELIMIT_ENABLED = False
 
 
 @pytest.fixture

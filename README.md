@@ -109,6 +109,27 @@ its projects and issues and add comments. Only an admin can create a project
 or manage members. Only an admin or the assignee can change an issue's status
 or assignee.
 
+## Rate limiting
+
+`/api/auth/login` allows 10 attempts a minute and 100 an hour per IP;
+`/api/auth/register` allows 5 an hour and 20 a day. Nothing else is limited —
+a signed-in user reading their own board should never be throttled.
+
+Two things must be dealt with before this is deployed, or the limiter will be
+either useless or actively harmful:
+
+**Storage is in-process.** Each gunicorn worker keeps its own counters, so
+running four workers quadruples every limit. Set `RATELIMIT_STORAGE_URI` to a
+Redis URL before running more than one worker.
+
+**The client IP must be real.** Limits key on `request.remote_addr`, which
+behind a load balancer is the balancer, not the visitor. Deployed without
+`ProxyFix`, every visitor shares one bucket and the tenth failed login by
+anyone locks out everyone. Wrap the app in
+`werkzeug.middleware.proxy_fix.ProxyFix` with the trusted hop count for your
+host — and only when actually behind a proxy, since otherwise the forwarding
+headers can be spoofed.
+
 ## Checks
 
 ```bash

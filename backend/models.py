@@ -1,3 +1,4 @@
+from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import select, func
 from sqlalchemy.orm import column_property
@@ -17,7 +18,15 @@ class User(db.Model):
     created_at = db.Column(db.DateTime(timezone=True), default=utcnow)
 
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+        # Unset everywhere except the test suite, where scrypt at ~118ms a call
+        # is most of the runtime. Leaving it unset uses Werkzeug's own default,
+        # so a Werkzeug upgrade improves this without anyone editing it.
+        # Never set PASSWORD_HASH_METHOD outside tests.
+        method = current_app.config.get('PASSWORD_HASH_METHOD')
+        self.password_hash = (
+            generate_password_hash(password, method=method)
+            if method else generate_password_hash(password)
+        )
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)

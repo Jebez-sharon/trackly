@@ -5,9 +5,8 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from werkzeug.exceptions import HTTPException
 from config import Config
 from models import db
-from flask_jwt_extended  import JWTManager
-
-jwt = JWTManager()
+from flask_limiter.errors import RateLimitExceeded
+from extensions import jwt, limiter
 
 def register_error_handlers(app):
     """Every failure leaves this API as JSON, never HTML.
@@ -16,6 +15,15 @@ def register_error_handlers(app):
     page. The frontend reads `data.error || data.msg`, finds neither in
     HTML, and shows "Request failed with status code 500" with no cause.
     """
+
+    @app.errorhandler(RateLimitExceeded)
+    def handle_rate_limit(e):
+        # Without this the description is the raw limit string, so the user is
+        # shown "10 per 1 minute". Retry-After carries the real answer.
+        app.logger.warning('Rate limit hit on %s %s', request.method, request.path)
+        return jsonify({
+            'error':'Too many attempts. Wait a moment and try again.'
+        }), 429
 
     @app.errorhandler(HTTPException)
     def handle_http_exception(e):
@@ -49,6 +57,7 @@ def create_app(config_object=Config):
     db.init_app(app)
 
     jwt.init_app(app)
+    limiter.init_app(app)
 
     from routes.auth_routes import auth_bp
     app.register_blueprint(auth_bp)

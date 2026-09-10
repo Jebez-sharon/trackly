@@ -5,6 +5,8 @@ from routes.utils import json_body
 from models import db, Project
 from routes.utils import current_user_id, get_membership, require_admin
 
+NAME_MAX = 100  # Project.name
+
 project_bp = Blueprint('projects',__name__,url_prefix='/api/organizations')
 
 # A single project is addressed by its own id, not through its organization,
@@ -41,6 +43,12 @@ def create_project(org_id):
     if not name or not key:
         return jsonify({
             'error':'Name and key are required'
+        }), 400
+
+    # Project.name is String(100); unchecked it reaches the database as a 500.
+    if len(name) > NAME_MAX:
+        return jsonify({
+            'error':f'Name must be {NAME_MAX} characters or fewer'
         }), 400
 
     if not key.isalnum() or not (1 <= len(key) <= 10):
